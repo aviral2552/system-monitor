@@ -81,7 +81,7 @@ def captureProcessList():
         except psutil.AccessDenied:
             noAccess += 1
     
-    f.write("\nDumped {} processess successfully and couldn't access {} processes due to insufficient privileges.".format(access, noAccess))
+    f.write("\nDumped {} processes successfully and couldn't access {} processes due to insufficient privileges.".format(access, noAccess))
     f.close()
 
 def captureSensorState():
@@ -143,7 +143,7 @@ def captureBatteryState():
         f.write("\nPlugged in: Yes")
     else:
         f.write("\nLeft:       %s" % secs2hours(batt.secsleft))
-        f.write("\nStatus:     %s" % "discharging")
+        f.write("\nStatus:     %s" % "Discharging")
         f.write("\nPlugged in: No")
     f.close()
 
@@ -207,7 +207,7 @@ def captureNetworkInterfaces():
                 io.dropout))
         for addr in addrs:
             f.write("\n    %-4s" % af_map.get(addr.family, addr.family))
-            f.write(" address   : %s" % addr.address)
+            f.write("address   : %s" % addr.address)
             if addr.broadcast:
                 f.write("\n         broadcast : %s" % addr.broadcast)
             if addr.netmask:
