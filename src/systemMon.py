@@ -232,25 +232,25 @@ def main():
     logTrack = open(currentLog, 'a')
     logTrack.write("\n" + separator + "\n")
 
-    logTrack.write("\nStart of capturing log at :" + time.ctime() + "\n\n")
+    logTrack.write("\nStart of capturing log at :" + time.ctime() + "\n\nCapturing...\n\n")
 
     bootTime()
-    logTrack.write("Successfully captured system boot time!\n")
+    logTrack.write("System boot time\n")
 
     captureProcessList()
-    logTrack.write("Successfully captured all running processes!\n")
+    logTrack.write("Running processes and resources used\n")
 
     captureDiskState()
-    logTrack.write("Successfully captured disk and partition information!\n")
+    logTrack.write("Disk and partition information\n")
 
     captureNetworkInterfaces()
-    logTrack.write("Successfully captured current state of network interfaces!\n")
+    logTrack.write("Network interfaces\n")
 
     captureSensorState()
-    logTrack.write("Successfully captured current state of hardware sensors!\n")
+    logTrack.write("Hardware sensors\n")
 
     captureBatteryState()
-    logTrack.write("Successfully captured current battery state!\n")
+    logTrack.write("Battery state\n\nAll done!")
 
 
     logTrack.write("\n\nEnd of capturing log at: " + time.ctime() + "\n")
