@@ -277,8 +277,9 @@ if __name__ == '__main__':
 
 
     while i < maxTime:
-        print("Run #%i" % j)
+        print("Starting Run #%i" % j)
         mainProg()
+        print("Completed. Now I will wait for %i seconds.\n" %freq)
         os.chdir(currentDirectory)
         time.sleep(freq)
         i += freq
