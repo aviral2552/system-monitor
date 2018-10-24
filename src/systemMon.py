@@ -273,9 +273,13 @@ if __name__ == '__main__':
     i = 0
     j = 1
 
+    currentDirectory = os.getcwd()
+
+
     while i < maxTime:
         print("Run #%i" % j)
         mainProg()
+        os.chdir(currentDirectory)
         time.sleep(freq)
         i += freq
         j += 1
