@@ -320,6 +320,6 @@ if __name__ == '__main__':
         print("Run #%i completed! Time remaining till next run: " % i)
         spinner.start()
         countdown(freq)
-        time.sleep(freq)
+        time.sleep(int(freq/2))
         spinner.stop()
         i += 1
