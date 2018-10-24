@@ -223,7 +223,7 @@ def bootTime():
     f.write("\nCurrent system boot time is: " + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"))
     f.close()
 
-def main():
+def mainProg():
     ## Main program
     if not os.path.isdir("logs"):
         os.system('mkdir logs')
@@ -267,6 +267,15 @@ def main():
 if __name__ == '__main__':
     
     ## Run the entire script every 5 minutes for next 5 hours
-    for i in range (60):
-        main()
-        time.sleep(300)
+    freq = int(input("At what frequency should I collect the logs (in seconds): "))
+    maxTime = float(input("What is the total amount of time that I should run for (in minutes): "))
+    maxTime = int(60 * maxTime)
+    i = 0
+    j = 1
+
+    while i < maxTime:
+        print("Run #%i" % j)
+        mainProg()
+        time.sleep(freq)
+        i += freq
+        j += 1
