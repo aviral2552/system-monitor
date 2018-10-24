@@ -5,7 +5,9 @@
 # Last update: 23 October 2018
 # Version: 0.2a
 #
-# References: https://psutil.readthedocs.io/en/latest/#other-system-info
+# References:
+# https://psutil.readthedocs.io/en/latest/#other-system-info
+# http://code.activestate.com/recipes/578019
 #
 ###
 
@@ -31,11 +33,6 @@ duplex_map = {
 }
 
 def bytes2human(n):
-    # http://code.activestate.com/recipes/578019
-    # >>> bytes2human(10000)
-    # '9.8K'
-    # >>> bytes2human(100001221)
-    # '95.4M'
     symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
     prefix = {}
     for i, s in enumerate(symbols):
@@ -56,7 +53,7 @@ def captureProcessList():
     format = "%7s %7s %10s %7s %12s %12s %7s"
     format2 = "%8s %8s %7.2f %7.2f %12s %12s %7s"
 
-    logPath = r'processes_%s.log' % str(datetime.date.today())
+    logPath = str('processes.log')
     f = open(logPath, 'a')
     f.write("\n\n" + separator + "\n")
     f.write(time.ctime() + "\n")
@@ -86,7 +83,7 @@ def captureProcessList():
 
 def captureSensorState():
 
-    logPath = r'sensors_%s.log' % str(datetime.date.today())
+    logPath = str('sensors.log')
     f = open(logPath, 'a')
 
     f.write("\n\n" + separator + "\n")
@@ -124,7 +121,7 @@ def captureSensorState():
 
 def captureBatteryState():
     
-    logPath = r'battery_%s.log' % str(datetime.date.today())
+    logPath = str('battery.log')
     f = open(logPath, 'a')
 
     f.write("\n\n" + separator + "\n")
@@ -149,7 +146,7 @@ def captureBatteryState():
 
 def captureDiskState():
 
-    logPath = r'disks_%s.log' % str(datetime.date.today())
+    logPath = str('disks.log')
     f = open(logPath, 'a')
 
     f.write("\n\n" + separator + "\n")
@@ -179,7 +176,7 @@ def captureDiskState():
 
 def captureNetworkInterfaces():
 
-    logPath = r'networkInterfaces_%s.log' % str(datetime.date.today())
+    logPath = str('networkInterfaces.log')
     f = open(logPath, 'a')
 
     f.write("\n\n" + separator + "\n")
@@ -218,7 +215,7 @@ def captureNetworkInterfaces():
     f.close()
 
 def bootTime():
-    logPath = r'bootTime%s.log' % str(datetime.date.today())
+    logPath = str('bootTime.log')
     f = open(logPath, 'a')
 
     f.write("\n\n" + separator + "\n")
@@ -228,8 +225,19 @@ def bootTime():
 
 def main():
     ## Main program
-    currentLog = r'current_%s.log' % str(datetime.date.today())
-    logTrack = open(currentLog, 'a')
+    if not os.path.isdir("logs"):
+        os.system('mkdir logs')
+    
+    os.chdir('logs')
+    
+    currentDate = str(datetime.date.today())
+    if not os.path.isdir(currentDate):
+        os.system('mkdir ' + currentDate)
+    
+    os.chdir(currentDate)
+
+    logPath = str('logTracker.log')
+    logTrack = open(logPath, 'a')
     logTrack.write("\n" + separator + "\n")
 
     logTrack.write("\nStart of capturing log at :" + time.ctime() + "\n\nCapturing...\n\n")
