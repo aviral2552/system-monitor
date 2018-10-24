@@ -63,6 +63,9 @@ class Spinner:
         time.sleep(self.delay)
         sys.stdout.write('\b')
 
+def clearScreen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def countdown(t):
     while t:
         mins, secs = divmod(t, 60)
@@ -307,19 +310,24 @@ if __name__ == '__main__':
     
     ## Run the entire script every 5 minutes for next 5 hours
     
-    maxTime = int(input("How many times would you like me to collect the logs: "))
+    numOfLogs = int(input("How many times would you like me to collect the logs: "))
     freq = int(input("At what frequency should I collect the logs? Every (in seconds): "))
     i = 1
 
     currentDirectory = os.getcwd()
     spinner = Spinner()
-
-    while i <= maxTime:
+    
+    while i <= numOfLogs:
         mainProg()
         os.chdir(currentDirectory)
-        print("Run #%i completed! Time remaining till next run: " % i)
-        spinner.start()
-        countdown(freq)
-        time.sleep(int(freq/2))
-        spinner.stop()
+        clearScreen()
+        print("Statistics\n==========\n\nTotal logs to collect: %i\nWait interval (in seconds): %i" % (numOfLogs, freq))
+        print("\nLogs collected: %i\nLogs remaining: %i\n" % (i, numOfLogs - i))
+        if i != numOfLogs:
+            print("Countdown to next log collection: ")
+            spinner.start()
+            countdown(freq)
+            spinner.stop()
+        else:
+            print("All logs have been captured and placed in \logs\%s\ directory.\n" % str(datetime.date.today()))
         i += 1
