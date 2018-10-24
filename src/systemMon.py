@@ -265,4 +265,8 @@ def main():
     logTrack.close()
 
 if __name__ == '__main__':
-    main()
+    
+    ## Run the entire script every 5 minutes for next 5 hours
+    for i in range (60):
+        main()
+        time.sleep(300)
