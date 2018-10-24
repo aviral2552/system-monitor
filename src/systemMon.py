@@ -17,6 +17,7 @@ import psutil
 import time
 import datetime
 import socket
+import threading
 
 separator = "-" * 80
 
@@ -31,6 +32,44 @@ duplex_map = {
     psutil.NIC_DUPLEX_HALF: "half",
     psutil.NIC_DUPLEX_UNKNOWN: "?",
 }
+
+class Spinner:
+    busy = False
+    delay = 0.1
+
+    @staticmethod
+    def spinning_cursor():
+        while 1: 
+            for cursor in '|/-\\': yield cursor
+
+    def __init__(self, delay=None):
+        self.spinner_generator = self.spinning_cursor()
+        if delay and float(delay): self.delay = delay
+
+    def spinner_task(self):
+        while self.busy:
+            sys.stdout.write(next(self.spinner_generator))
+            sys.stdout.flush()
+            time.sleep(self.delay)
+            sys.stdout.write('\b')
+            sys.stdout.flush()
+
+    def start(self):
+        self.busy = True
+        threading.Thread(target=self.spinner_task).start()
+
+    def stop(self):
+        self.busy = False
+        time.sleep(self.delay)
+        sys.stdout.write('\b')
+
+def countdown(t):
+    while t:
+        mins, secs = divmod(t, 60)
+        timeformat = '{:02d}:{:02d}'.format(mins, secs)
+        print(timeformat, end='\r')
+        time.sleep(1)
+        t -= 1
 
 def bytes2human(n):
     symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
@@ -267,20 +306,20 @@ def mainProg():
 if __name__ == '__main__':
     
     ## Run the entire script every 5 minutes for next 5 hours
-    freq = int(input("At what frequency should I collect the logs (in seconds): "))
-    maxTime = float(input("What is the total amount of time that I should run for (in minutes): "))
-    maxTime = int(60 * maxTime)
-    i = 0
-    j = 1
+    
+    maxTime = int(input("How many times would you like me to collect the logs: "))
+    freq = int(input("At what frequency should I collect the logs? Every (in seconds): "))
+    i = 1
 
     currentDirectory = os.getcwd()
+    spinner = Spinner()
 
-
-    while i < maxTime:
-        print("Starting Run #%i" % j)
+    while i <= maxTime:
         mainProg()
-        print("Completed. Now I will wait for %i seconds.\n" %freq)
         os.chdir(currentDirectory)
+        print("Run #%i completed! Time remaining till next run: " % i)
+        spinner.start()
+        countdown(freq)
         time.sleep(freq)
-        i += freq
-        j += 1
+        spinner.stop()
+        i += 1
