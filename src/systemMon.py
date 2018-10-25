@@ -120,7 +120,7 @@ def captureProcessList():
         except psutil.AccessDenied:
             noAccess += 1
     
-    f.write("\nDumped {} processes successfully and couldn't access {} processes due to insufficient privileges.".format(access, noAccess))
+    f.write("\nDumped %i processes successfully and couldn't access %i processes due to insufficient privileges." %(access, noAccess))
     f.close()
 
 def captureSensorState():
@@ -308,7 +308,6 @@ def mainProg():
 
 if __name__ == '__main__':
     
-    ## Run the entire script every 5 minutes for next 5 hours
     
     numOfLogs = int(input("How many times would you like me to collect the logs: "))
     freq = int(input("At what frequency should I collect the logs? Every (in seconds): "))
