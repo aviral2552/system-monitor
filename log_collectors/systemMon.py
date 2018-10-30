@@ -1,11 +1,12 @@
 ###
 # Simple cross-platform python script to monitor and capture CPU, memory, sensor and battery information etc
+# Part of Project Aradia
 #
-# Author: https://github.com/thelamehacker
-# Last update: 23 October 2018
+# Author: Lame Hacker (https://github.com/thelamehacker)
+# Last update: 30 October 2018
 # Version: 0.2a
 #
-# References:
+# Attributions:
 # https://psutil.readthedocs.io/en/latest/#other-system-info
 # http://code.activestate.com/recipes/578019
 #
