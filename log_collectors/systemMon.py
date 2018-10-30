@@ -12,16 +12,30 @@
 #
 ###
 
+# For navigating directories.
 import os
 import sys
+
+# For capturing most data points.
+# Intentionally not using anything else other than psutil to maintain cross-platform compatibility.
 import psutil
+
+# Logs must come with time. Hence, time must be imported. No bargaining here.
 import time
 import datetime
+
+# For capturing network interfaces data.
 import socket
+
+# For multi-threading support.
+# Currently only being used to run a spinner at console while waiting.
+# Future implementation may include a consistent network bandwidth monitor, running in a separate thread.
 import threading
 
+# Standard separator of 80 neat hyphens for dividing captured logs in a day.
 separator = "-" * 80
 
+# For help with capturing network interfaces in captureNetworkInterfaces function.
 af_map = {
     socket.AF_INET: 'IPv4',
     socket.AF_INET6: 'IPv6',
@@ -34,6 +48,9 @@ duplex_map = {
     psutil.NIC_DUPLEX_UNKNOWN: "?",
 }
 
+
+# You spin my head right round, right round.
+# On the console while waiting, right round round.
 class Spinner:
     busy = False
     delay = 0.1
@@ -64,9 +81,12 @@ class Spinner:
         time.sleep(self.delay)
         sys.stdout.write('\b')
 
+# Housekeeping on the console
+# Detects the OS and runs appropriate clear screen command.
 def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+# To display the countdown till next run of log captures on the console.
 def countdown(t):
     while t:
         mins, secs = divmod(t, 60)
@@ -75,6 +95,8 @@ def countdown(t):
         time.sleep(1)
         t -= 1
 
+# Convert bytes to human readable format
+# From - http://code.activestate.com/recipes/578019
 def bytes2human(n):
     symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
     prefix = {}
@@ -86,11 +108,16 @@ def bytes2human(n):
             return '%.1f%s' % (value, s)
     return "%sB" % n
 
+# Convert seconds to human readable format (HH:MM:SS).
+# No AM/PM support to keep things consistent and reduce post processing during log cleaning and scraping.
 def secs2hours(secs):
     mm, ss = divmod(secs, 60)
     hh, mm = divmod(mm, 60)
     return "%d:%02d:%02d" % (hh, mm, ss)
 
+# To capture the current state of running processes on the system.
+# Run the script as admin to capture more processes.
+# Log will also write how many processes were inaccesible due to permission/access issues.
 def captureProcessList():
 
     format = "%7s %7s %10s %7s %12s %12s %7s"
@@ -124,6 +151,7 @@ def captureProcessList():
     f.write("\nDumped %i processes successfully and couldn't access %i processes due to insufficient privileges." %(access, noAccess))
     f.close()
 
+# To check the temprature and fan sensors.
 def captureSensorState():
 
     logPath = str('sensors.log')
@@ -162,6 +190,7 @@ def captureSensorState():
                     entry.label or name, entry.current))
         f.close()
 
+# To capture current battery status including percentage, time left, charging state
 def captureBatteryState():
     
     logPath = str('battery.log')
@@ -174,7 +203,7 @@ def captureBatteryState():
         f.write("\nPlatform or system is not supported.\n")
     batt = psutil.sensors_battery()
     if batt is None:
-        f.write("\nBattery not deteced.\n")
+        f.write("\nBattery not detected.\n")
 
     f.write("\nCurrent charge:     %s%%" % round(batt.percent, 2))
     if batt.power_plugged:
@@ -187,6 +216,7 @@ def captureBatteryState():
         f.write("\nPlugged in: No")
     f.close()
 
+# To capture disk and partition state
 def captureDiskState():
 
     logPath = str('disks.log')
@@ -217,6 +247,7 @@ def captureDiskState():
             part.mountpoint))
     f.close()
 
+# To capture state of all network interfaces
 def captureNetworkInterfaces():
 
     logPath = str('networkInterfaces.log')
@@ -257,6 +288,7 @@ def captureNetworkInterfaces():
         
     f.close()
 
+# To check the system boot time
 def bootTime():
     logPath = str('bootTime.log')
     f = open(logPath, 'a')
@@ -266,19 +298,30 @@ def bootTime():
     f.write("\nCurrent system boot time is: " + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"))
     f.close()
 
+# The unofficial main function
 def mainProg():
-    ## Main program
-    if not os.path.isdir("logs"):
+
+    # Check if 'logs' directory exist at current path
+    # Create 'logs' directory if it doesn't already exist
+    if not os.path.isdir('logs'):
         os.system('mkdir logs')
     
+    # Navigate to 'logs' directory
     os.chdir('logs')
     
+    # Check if there is already a directory with current date "YYYY-MM-DD" format
+    # Create the directory if it doesn't exist
     currentDate = str(datetime.date.today())
     if not os.path.isdir(currentDate):
         os.system('mkdir ' + currentDate)
     
+    # Navigate to the directory with current date
+    # Reassigning and keeping the current date in 'currentDate' variable to overcome errors when date changes at midnight
+    # and the program is still running. The program will continue capturing logs in the next date folder.
     os.chdir(currentDate)
 
+    # A log file for track if the logs were successfully created.
+    # TODO need to add error handling while calling the functions and write back to logTracker.log accordingly.
     logPath = str('logTracker.log')
     logTrack = open(logPath, 'a')
     logTrack.write("\n" + separator + "\n")
@@ -309,14 +352,18 @@ def mainProg():
 
 if __name__ == '__main__':
     
-    
+    # Check with the user on the number of executions and frequency of log collection.
     numOfLogs = int(input("How many times would you like me to collect the logs: "))
     freq = int(input("At what frequency should I collect the logs? Every (in seconds): "))
     i = 1
 
+    # Save the current directory to navigate back to avoid infinitely nested data folders.
     currentDirectory = os.getcwd()
+
+    # New instance of "You spin my head right round, right round."
     spinner = Spinner()
     
+    # Run the program at specified frequency and number of times. And a bit of nice console output.
     while i <= numOfLogs:
         mainProg()
         os.chdir(currentDirectory)
