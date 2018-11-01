@@ -8,7 +8,6 @@
 # Last update: 1 November 2018
 # Version: 0.1
 #
-#
 ###
 
 import collections
@@ -19,7 +18,8 @@ import psutil
 
 # Setting target interface
 # In future, we will iterate through interfaces from psutil.net_io_counters
-# And create multiple thread when computer has an assigned IPv4 address (active connection)
+# And create a thread for each interface where computer has an assigned IPv4 address (active connection)
+# Every thread will then write to a log file with <undefined_frequency> along with a total UL/DL speed for <undefined_time>
 targetInterface = 'en8'
 
 # Set frequency for speed collection in seconds
@@ -82,10 +82,10 @@ def createThread(rate):
 
 if __name__ == '__main__':
         
-        # Create a deque of length 1 to hold the ul/dl- values
+        # Create a deque of length 1 to hold the UL/DL values
         transfer_rate = collections.deque(maxlen=1)
 
-        # Calling the function to create threads
+        # Calling the function to create thread(s)
         createThread(transfer_rate)
 
         # Print current values every 'printFreq' second on the console
