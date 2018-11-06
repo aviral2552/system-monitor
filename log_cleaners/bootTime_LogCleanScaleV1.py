@@ -4,7 +4,7 @@
 ## prototype 
 ## notes: mini scale to be tested across all local bootTime.log with all dates
 ## resources: https://stackoverflow.com/questions/17555218/python-how-to-sort-a-list-of-lists-by-the-fourth-element-in-each-list
-## LuckyDucky + thelamehacker
+## LuckyDucky
 ##########################################################################
 import pandas as pd
 import numpy as np  
