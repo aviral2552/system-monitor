@@ -341,7 +341,7 @@ def bootTime():
     f.write("\n<log>")
     f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
     f.write("\n<boottime>" + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S") + "</boottime>")
-    f.write("\n</log>")
+    f.write("\n</log>\n")
     f.close()
 
 # The unofficial main function
@@ -367,33 +367,61 @@ def mainProg():
     os.chdir(currentDate)
 
     # A log file for track if the logs were successfully created.
-    # TODO need to add error handling while calling the functions and write back to logTracker.log accordingly.
     logPath = str('logTracker.log')
     logTrack = open(logPath, 'a')
-    logTrack.write("\n" + separator + "\n")
 
-    logTrack.write("\nStart of capturing log at :" + time.ctime() + "\n\nCapturing...\n\n")
+    logTrack.write("\n<log>")
+    logTrack.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>\n")
 
-    bootTime()
-    logTrack.write("System boot time\n")
+    logTrack.write("\n<bootTime>")
+    try:
+        bootTime()
+        logTrack.write("captured")
+    except:
+        logTrack.write("error")
+    logTrack.write("</bootTime>")
 
-    captureProcessList()
-    logTrack.write("Running processes and resources used\n")
+    logTrack.write("\n<processes>")
+    try:
+        captureProcessList()
+        logTrack.write("captured")
+    except:
+        logTrack.write("error")
+    logTrack.write("</processes>")
 
-    captureDiskState()
-    logTrack.write("Disk and partition information\n")
+    logTrack.write("\n<disks>")
+    try:
+        captureDiskState()
+        logTrack.write("captured")
+    except:
+        logTrack.write("error")
+    logTrack.write("</disks>")
 
-    captureNetworkInterfaces()
-    logTrack.write("Network interfaces\n")
+    logTrack.write("\n<networkInterfaces>")
+    try:
+        captureNetworkInterfaces()
+        logTrack.write("captured")
+    except:
+        logTrack.write("error")
+    logTrack.write("</networkInterfaces>")
 
-    captureSensorState()
-    logTrack.write("Hardware sensors\n")
+    logTrack.write("\n<sensors>")
+    try:
+        captureSensorState()
+        logTrack.write("captured")
+    except:
+        logTrack.write("error")
+    logTrack.write("</sensors>")
 
-    captureBatteryState()
-    logTrack.write("Battery state\n\nAll done!")
+    logTrack.write("\n<battery>")
+    try:
+        captureBatteryState()
+        logTrack.write("captured")
+    except:
+        logTrack.write("error")
+    logTrack.write("</battery>")
 
-
-    logTrack.write("\n\nEnd of capturing log at: " + time.ctime() + "\n")
+    logTrack.write("\n\n</log>\n")
     logTrack.close()
 
 if __name__ == '__main__':
