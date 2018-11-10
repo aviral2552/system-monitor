@@ -3,8 +3,8 @@
 # Part of Project Aradia
 #
 # Author: Lame Hacker (https://github.com/thelamehacker)
-# Last update: 30 October 2018
-# Version: 0.2a
+# Last update: 10 November 2018
+# Version: 0.3a
 #
 # Attributions:
 # https://psutil.readthedocs.io/en/latest/#other-system-info
@@ -156,9 +156,6 @@ def captureSensorState():
         f.close()
 
 
-
-
-
 # To capture state of all network interfaces
 def captureNetworkInterfaces():
 
@@ -226,8 +223,6 @@ def captureNetworkInterfaces():
                     
     f.write("\n\n</log>\n")
     f.close()
-
-
 
 
 # To capture current battery status including percentage, time left, charging state
