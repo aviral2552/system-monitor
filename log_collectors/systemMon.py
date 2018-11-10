@@ -39,7 +39,7 @@ separator = "-" * 80
 af_map = {
     socket.AF_INET: 'IPv4',
     socket.AF_INET6: 'IPv6',
-    #psutil.AF_LINK: 'MAC',
+    psutil.AF_LINK: 'MAC',
 }
 
 duplex_map = {
@@ -202,24 +202,31 @@ def captureNetworkInterfaces():
                
             for addr in addrs:
 
-                f.write("\n<%-4s>" % af_map.get(addr.family, addr.family))
-                f.write(str(addr.address))
-                f.write("</%-4s>" % af_map.get(addr.family, addr.family))
+                curAddr = str(af_map.get(addr.family, addr.family))
+
+                if currentDirectory.startswith("IP", 0, 1):
+                    f.write("\n<%-4s>" % curAddr)
+                    f.write(str(addr.address))
+                    f.write("</%-4s>" % curAddr)
+                else:
+                    f.write("\n<%-3s>" % curAddr)
+                    f.write(str(addr.address))
+                    f.write("</%-3s>" % curAddr)
 
                 if addr.broadcast:
-                    f.write("\n<%-4s_broadcast>" % af_map.get(addr.family, addr.family))
+                    f.write("\n<%-4s_broadcast>" % curAddr)
                     f.write(str(addr.broadcast))
-                    f.write("</%-4s_broadcast>" % af_map.get(addr.family, addr.family))
+                    f.write("</%-4s_broadcast>" % curAddr)
 
                 if addr.netmask:
-                    f.write("\n<%-4s_netmask>" % af_map.get(addr.family, addr.family))
+                    f.write("\n<%-4s_netmask>" % curAddr)
                     f.write(str(addr.netmask))
-                    f.write("</%-4s_netmask>" % af_map.get(addr.family, addr.family))
+                    f.write("</%-4s_netmask>" % curAddr)
 
                 if addr.ptp:
-                    f.write("\n<%-4s_p2p>" % af_map.get(addr.family, addr.family))
+                    f.write("\n<%-4s_p2p>" % curAddr)
                     f.write(str(addr.ptp))
-                    f.write("</%-4s_p2p>" % af_map.get(addr.family, addr.family))
+                    f.write("</%-4s_p2p>" % curAddr)
                     
     f.write("\n\n</log>\n")
     f.close()
