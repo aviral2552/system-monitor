@@ -216,32 +216,6 @@ def captureBatteryState():
         f.write("\nPlugged in: No")
     f.close()
 
-
-
-    logPath = str('disks.log')
-    f = open(logPath, 'a')
-
-    f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
-
-    for part in psutil.disk_partitions(all=False):
-        if os.name == 'nt':
-            if 'cdrom' in part.opts or part.fstype == '':
-                # skip cd-rom drives with no disk in it
-                continue
-        usage = psutil.disk_usage(part.mountpoint)
-
-        f.write("\n<name>" + str(part.device) + "</name>")
-        f.write("\n<size>" + str(bytes2human(usage.total)) + "</size>")
-        f.write("\n<used>" + str(bytes2human(usage.used)) + "</used>")
-        f.write("\n<free>" + str(bytes2human(usage.free)) + "</free>")
-        f.write("\n<%used>" + str(int(usage.percent)) + "</%used>")
-        f.write("\n<fileSys>" + str(part.fstype) + "</fileSys>")
-        f.write("\n<mountPoint>" + str(part.mountpoint) + "</mountPoint>")
-
-    f.write("\n</log>\n")
-    f.close()
-
 # To capture state of all network interfaces
 def captureNetworkInterfaces():
 
@@ -285,6 +259,29 @@ def captureNetworkInterfaces():
 
 # To capture disk and partition state
 def captureDiskState():
+    logPath = str('disks.log')
+    f = open(logPath, 'a')
+
+    f.write("\n<log>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+
+    for part in psutil.disk_partitions(all=False):
+        if os.name == 'nt':
+            if 'cdrom' in part.opts or part.fstype == '':
+                # skip cd-rom drives with no disk in it
+                continue
+        usage = psutil.disk_usage(part.mountpoint)
+
+        f.write("\n<name>" + str(part.device) + "</name>")
+        f.write("\n<size>" + str(bytes2human(usage.total)) + "</size>")
+        f.write("\n<used>" + str(bytes2human(usage.used)) + "</used>")
+        f.write("\n<free>" + str(bytes2human(usage.free)) + "</free>")
+        f.write("\n<%used>" + str(int(usage.percent)) + "</%used>")
+        f.write("\n<fileSys>" + str(part.fstype) + "</fileSys>")
+        f.write("\n<mountPoint>" + str(part.mountpoint) + "</mountPoint>")
+
+    f.write("\n</log>\n")
+    f.close()
 
 # To check the system boot time
 def bootTime():
