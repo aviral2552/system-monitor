@@ -36,17 +36,7 @@ import threading
 separator = "-" * 80
 
 # For help with capturing network interfaces in captureNetworkInterfaces function.
-af_map = {
-    socket.AF_INET: 'IPv4',
-    socket.AF_INET6: 'IPv6',
-    psutil.AF_LINK: 'MAC',
-}
 
-duplex_map = {
-    psutil.NIC_DUPLEX_FULL: "full",
-    psutil.NIC_DUPLEX_HALF: "half",
-    psutil.NIC_DUPLEX_UNKNOWN: "unknown",
-}
 
 
 # You spin my head right round, right round.
@@ -94,26 +84,6 @@ def countdown(t):
         print(timeformat, end='\r')
         time.sleep(1)
         t -= 1
-
-# Convert bytes to human readable format
-# From - http://code.activestate.com/recipes/578019
-def bytes2human(n):
-    symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
-    prefix = {}
-    for i, s in enumerate(symbols):
-        prefix[s] = 1 << (i + 1) * 10
-    for s in reversed(symbols):
-        if n >= prefix[s]:
-            value = float(n) / prefix[s]
-            return '%.1f%s' % (value, s)
-    return "%sB" % n
-
-# Convert seconds to human readable format (HH:MM:SS).
-# No AM/PM support to keep things consistent and reduce post processing during log cleaning and scraping.
-def secs2hours(secs):
-    mm, ss = divmod(secs, 60)
-    hh, mm = divmod(mm, 60)
-    return "%d:%02d:%02d" % (hh, mm, ss)
 
 # To check the temprature and fan sensors.
 def captureSensorState():
@@ -167,6 +137,21 @@ def captureNetworkInterfaces():
 
     stats = psutil.net_if_stats()
     io_counters = psutil.net_io_counters(pernic=True)
+    
+    # For iterating through addresses
+    af_map = {
+    socket.AF_INET: 'IPv4',
+    socket.AF_INET6: 'IPv6',
+    psutil.AF_LINK: 'MAC',
+    }
+
+    # For looking up duplex state
+    duplex_map = {
+        psutil.NIC_DUPLEX_FULL: "full",
+        psutil.NIC_DUPLEX_HALF: "half",
+        psutil.NIC_DUPLEX_UNKNOWN: "unknown",
+    }
+
     for nic, addrs in psutil.net_if_addrs().items():
         keepCount = 0
         
@@ -261,7 +246,7 @@ def captureBatteryState():
             f.write("\n<status>fully charged</status>")
         f.write("\n<plugged>yes</plugged>")
     else:
-        f.write("\n<remaining>" + str(secs2hours(batt.secsleft)) + "</remaining>")
+        f.write("\n<remaining>" + str(batt.secsleft) + "</remaining>")
         f.write("\n<status>discharging</status>")
         f.write("\n<plugged>no</plugged>")
     f.write("\n</log>\n")
@@ -276,7 +261,7 @@ def captureProcessList():
     f = open(logPath, 'a')
 
     f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>\n")
     access = 0
     noAccess = 0
 
@@ -322,15 +307,15 @@ def captureDiskState():
                 continue
         usage = psutil.disk_usage(part.mountpoint)
 
-        f.write("\n<name>" + str(part.device) + "</name>")
-        f.write("\n<size>" + str(bytes2human(usage.total)) + "</size>")
-        f.write("\n<used>" + str(bytes2human(usage.used)) + "</used>")
-        f.write("\n<free>" + str(bytes2human(usage.free)) + "</free>")
+        f.write("\n\n<name>" + str(part.device) + "</name>")
+        f.write("\n<size>" + str(usage.total) + "</size>")
+        f.write("\n<used>" + str(usage.used) + "</used>")
+        f.write("\n<free>" + str(usage.free) + "</free>")
         f.write("\n<%used>" + str(int(usage.percent)) + "</%used>")
         f.write("\n<fileSys>" + str(part.fstype) + "</fileSys>")
         f.write("\n<mountPoint>" + str(part.mountpoint) + "</mountPoint>")
 
-    f.write("\n</log>\n")
+    f.write("\n\n</log>\n")
     f.close()
 
 # To check the system boot time
