@@ -7,8 +7,7 @@
 # Version: 0.3a
 #
 # Attributions:
-# https://psutil.readthedocs.io/en/latest/#other-system-info
-# http://code.activestate.com/recipes/578019
+# https://psutil.readthedocs.io/
 #
 ###
 
@@ -20,7 +19,7 @@ import sys
 # Intentionally not using anything else other than psutil to maintain cross-platform compatibility.
 import psutil
 
-# Logs must come with time. Hence, time must be imported. No bargaining here.
+# All logs must come with time!
 import time
 import datetime
 
@@ -32,8 +31,7 @@ import socket
 # Future implementation may include a consistent network bandwidth monitor, running in a separate thread.
 import threading
 
-# You spin my head right round, right round.
-# On the console while waiting, right round round.
+# For the spinner on the console
 class Spinner:
     busy = False
     delay = 0.1
@@ -79,19 +77,21 @@ def countdown(t):
         t -= 1
 
 # To check the temprature and fan sensors.
+# This module currently only works on Linux platforms due to limitation of psutil
+# And the output is not on parity with the rest of the modules.
 def captureSensorState():
 
     logPath = str('sensors.log')
     f = open(logPath, 'a')
 
-    f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+    f.write('\n<log>')
+    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
 
-    if hasattr(psutil, "sensors_temperatures"):
+    if hasattr(psutil, 'sensors_temperatures'):
         temps = psutil.sensors_temperatures()
     else:
         temps = {}
-    if hasattr(psutil, "sensors_fans"):
+    if hasattr(psutil, 'sensors_fans'):
         fans = psutil.sensors_fans()
     else:
         fans = {}
@@ -104,20 +104,19 @@ def captureSensorState():
         f.write(name)
         # Temperatures.
         if name in temps:
-            f.write("\n    Temperatures:")
+            f.write('\n    Temperatures:')
             for entry in temps[name]:
-                f.write("\n        %-20s %s°C (high=%s°C, critical=%s°C)" % (
+                f.write('\n        %-20s %s°C (high=%s°C, critical=%s°C)' % (
                     entry.label or name, entry.current, entry.high,
                     entry.critical))
         # Fans.
         if name in fans:
-            f.write("\n    Fans:")
+            f.write('\n    Fans:')
             for entry in fans[name]:
-                f.write("\n        %-20s %s RPM" % (
+                f.write('\n        %-20s %s RPM' % (
                     entry.label or name, entry.current))
-        f.write("\n</log>\n")
-        f.close()
-
+    f.write('\n</log>\n')
+    f.close()
 
 # To capture state of all network interfaces
 def captureNetworkInterfaces():
@@ -125,8 +124,8 @@ def captureNetworkInterfaces():
     logPath = str('networkInterfaces.log')
     f = open(logPath, 'a')
 
-    f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+    f.write('\n<log>')
+    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
 
     stats = psutil.net_if_stats()
     io_counters = psutil.net_io_counters(pernic=True)
@@ -140,9 +139,9 @@ def captureNetworkInterfaces():
 
     # For looking up duplex state
     duplex_map = {
-        psutil.NIC_DUPLEX_FULL: "full",
-        psutil.NIC_DUPLEX_HALF: "half",
-        psutil.NIC_DUPLEX_UNKNOWN: "unknown",
+        psutil.NIC_DUPLEX_FULL: 'full',
+        psutil.NIC_DUPLEX_HALF: 'half',
+        psutil.NIC_DUPLEX_UNKNOWN: 'unknown',
     }
 
     for nic, addrs in psutil.net_if_addrs().items():
@@ -153,62 +152,61 @@ def captureNetworkInterfaces():
                 keepCount += 1
 
         if keepCount == 3:
-            f.write("\n\n<name>" + str(nic) + "</name>")
+            f.write('\n\n<name>' + str(nic) + '</name>')
             if nic in stats:
                 st = stats[nic]
             if st.isup is not None:
-                f.write("\n<active>yes</active>")
+                f.write('\n<active>yes</active>')
             else:
-                f.write("\n<active>no</active>")
-            f.write("\n<speed>" + str(st.speed) + "MB</speed>")
-            f.write("\n<duplex>" + str(duplex_map[st.duplex]) + "</duplex>")
-            f.write("\n<mtu>" + str(st.mtu) + "</mtu>")
+                f.write('\n<active>no</active>')
+            f.write('\n<speed>' + str(st.speed) + 'MB</speed>')
+            f.write('\n<duplex>' + str(duplex_map[st.duplex]) + '</duplex>')
+            f.write('\n<mtu>' + str(st.mtu) + '</mtu>')
 
             if nic in io_counters:
                 io = io_counters[nic]
 
-                f.write("\n<incomingBytes>" + str(io.bytes_recv) + "</incomingBytes>")
-                f.write("\n<incomingPackets>" + str(io.packets_recv) + "</incomingPackets>")
-                f.write("\n<incomingErrors>" + str(io.errin) + "</incomingErrors>")
-                f.write("\n<incomingDrops>" + str(io.dropin) + "</incomingDrops>")
+                f.write('\n<incomingBytes>' + str(io.bytes_recv) + '</incomingBytes>')
+                f.write('\n<incomingPackets>' + str(io.packets_recv) + '</incomingPackets>')
+                f.write('\n<incomingErrors>' + str(io.errin) + '</incomingErrors>')
+                f.write('\n<incomingDrops>' + str(io.dropin) + '</incomingDrops>')
 
-                f.write("\n<outgoingBytes>" + str(io.bytes_recv) + "</outgoingBytes>")
-                f.write("\n<outgoingPackets>" + str(io.packets_sent) + "</outgoingPackets>")
-                f.write("\n<outgoingErrors>" + str(io.errout) + "</outgoingErrors>")
-                f.write("\n<outgoingDrops>" + str(io.dropout) + "</outgoingDrops>")
+                f.write('\n<outgoingBytes>' + str(io.bytes_recv) + '</outgoingBytes>')
+                f.write('\n<outgoingPackets>' + str(io.packets_sent) + '</outgoingPackets>')
+                f.write('\n<outgoingErrors>' + str(io.errout) + '</outgoingErrors>')
+                f.write('\n<outgoingDrops>' + str(io.dropout) + '</outgoingDrops>')
 
                
             for addr in addrs:
 
                 curAddr = str(af_map.get(addr.family, addr.family))
 
-                if currentDirectory.startswith("IP", 0, 1):
-                    f.write("\n<%-4s>" % curAddr)
+                if currentDirectory.startswith('IP', 0, 1):
+                    f.write('\n<%-4s>' % curAddr)
                     f.write(str(addr.address))
-                    f.write("</%-4s>" % curAddr)
+                    f.write('</%-4s>' % curAddr)
                 else:
-                    f.write("\n<%-3s>" % curAddr)
+                    f.write('\n<%-3s>' % curAddr)
                     f.write(str(addr.address))
-                    f.write("</%-3s>" % curAddr)
+                    f.write('</%-3s>' % curAddr)
 
                 if addr.broadcast:
-                    f.write("\n<%-4s_broadcast>" % curAddr)
+                    f.write('\n<%-4s_broadcast>' % curAddr)
                     f.write(str(addr.broadcast))
-                    f.write("</%-4s_broadcast>" % curAddr)
+                    f.write('</%-4s_broadcast>' % curAddr)
 
                 if addr.netmask:
-                    f.write("\n<%-4s_netmask>" % curAddr)
+                    f.write('\n<%-4s_netmask>' % curAddr)
                     f.write(str(addr.netmask))
-                    f.write("</%-4s_netmask>" % curAddr)
+                    f.write('</%-4s_netmask>' % curAddr)
 
                 if addr.ptp:
-                    f.write("\n<%-4s_p2p>" % curAddr)
+                    f.write('\n<%-4s_p2p>' % curAddr)
                     f.write(str(addr.ptp))
-                    f.write("</%-4s_p2p>" % curAddr)
+                    f.write('</%-4s_p2p>' % curAddr)
                     
-    f.write("\n\n</log>\n")
+    f.write('\n\n</log>\n')
     f.close()
-
 
 # To capture current battery status including percentage, time left, charging state
 def captureBatteryState():
@@ -216,45 +214,45 @@ def captureBatteryState():
     logPath = str('battery.log')
     f = open(logPath, 'a')
 
-    f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+    f.write('\n<log>')
+    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
 
-    if not hasattr(psutil, "sensors_battery"):
-        f.write("\n<supported>no</supported>")
+    if not hasattr(psutil, 'sensors_battery'):
+        f.write('\n<supported>no</supported>')
     else:
-        f.write("\n<supported>yes</supported>")
+        f.write('\n<supported>yes</supported>')
     
     batt = psutil.sensors_battery()
     if batt is None:
-        f.write("\n<detected>no</detected>")
+        f.write('\n<detected>no</detected>')
     else:
-        f.write("\n<detected>yes</detected>")
+        f.write('\n<detected>yes</detected>')
     
-    f.write("\n<charge>" +str(round(batt.percent, 2)) + "</charge>")
+    f.write('\n<charge>' +str(round(batt.percent, 2)) + '</charge>')
 
     if batt.power_plugged:
         if batt.percent < 100:
-            f.write("\n<status>charging</status>")
+            f.write('\n<status>charging</status>')
         else:
-            f.write("\n<status>fully charged</status>")
-        f.write("\n<plugged>yes</plugged>")
+            f.write('\n<status>fully charged</status>')
+        f.write('\n<plugged>yes</plugged>')
     else:
-        f.write("\n<remaining>" + str(batt.secsleft) + "</remaining>")
-        f.write("\n<status>discharging</status>")
-        f.write("\n<plugged>no</plugged>")
-    f.write("\n</log>\n")
+        f.write('\n<remaining>' + str(batt.secsleft) + '</remaining>')
+        f.write('\n<status>discharging</status>')
+        f.write('\n<plugged>no</plugged>')
+    f.write('\n</log>\n')
     f.close()
 
 # To capture the current state of running processes on the system.
-# Run the script as admin to capture more processes.
+# Run the script as admin (or sudo) to capture more processes.
 # Log will also write how many processes were inaccesible due to permission/access issues.
 def captureProcessList():
 
     logPath = str('processes.log')
     f = open(logPath, 'a')
 
-    f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>\n")
+    f.write('\n<log>')
+    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>\n')
     access = 0
     noAccess = 0
 
@@ -263,26 +261,26 @@ def captureProcessList():
             pro_pid = p.pid
             name = p.name()
             cpu_percent = p.cpu_percent()/psutil.cpu_count()
-            mem_percent = p.memory_percent(memtype="rss")
+            mem_percent = p.memory_percent(memtype='rss')
             rss  = str(p.memory_info().rss)
             vms = str(p.memory_info().vms)
             path = p.exe()
 
-            f.write("\n<pid>" + str(pro_pid) + "</pid>")
-            f.write("\n<name>" + str(name) + "</name>")
-            f.write("\n<%cpu>" + str(cpu_percent) + "</%cpu>")
-            f.write("\n<%mem>" + str(mem_percent) + "</%mem>")
-            f.write("\n<vms>" + str(vms) + "</vms>")
-            f.write("\n<rss>" + str(rss) + "</rss>")
-            f.write("\n<path>" + str(path) + "</path>")
-            f.write("\n")
+            f.write('\n<pid>' + str(pro_pid) + '</pid>')
+            f.write('\n<name>' + str(name) + '</name>')
+            f.write('\n<%cpu>' + str(cpu_percent) + '</%cpu>')
+            f.write('\n<%mem>' + str(mem_percent) + '</%mem>')
+            f.write('\n<vms>' + str(vms) + '</vms>')
+            f.write('\n<rss>' + str(rss) + '</rss>')
+            f.write('\n<path>' + str(path) + '</path>')
+            f.write('\n')
             access += 1
         except psutil.AccessDenied:
             noAccess += 1
     
-    f.write("\n<captured>" + str(access) + "</captured>")
-    f.write("\n<skipped>" + str(noAccess) + "</skipped>")
-    f.write("\n</log>\n")
+    f.write('\n<captured>' + str(access) + '</captured>')
+    f.write('\n<skipped>' + str(noAccess) + '</skipped>')
+    f.write('\n</log>\n')
     f.close()
 
 # To capture disk and partition state
@@ -290,8 +288,8 @@ def captureDiskState():
     logPath = str('disks.log')
     f = open(logPath, 'a')
 
-    f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+    f.write('\n<log>')
+    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
 
     for part in psutil.disk_partitions(all=False):
         if os.name == 'nt':
@@ -300,26 +298,26 @@ def captureDiskState():
                 continue
         usage = psutil.disk_usage(part.mountpoint)
 
-        f.write("\n\n<name>" + str(part.device) + "</name>")
-        f.write("\n<size>" + str(usage.total) + "</size>")
-        f.write("\n<used>" + str(usage.used) + "</used>")
-        f.write("\n<free>" + str(usage.free) + "</free>")
-        f.write("\n<%used>" + str(int(usage.percent)) + "</%used>")
-        f.write("\n<fileSys>" + str(part.fstype) + "</fileSys>")
-        f.write("\n<mountPoint>" + str(part.mountpoint) + "</mountPoint>")
+        f.write('\n\n<name>' + str(part.device) + '</name>')
+        f.write('\n<size>' + str(usage.total) + '</size>')
+        f.write('\n<used>' + str(usage.used) + '</used>')
+        f.write('\n<free>' + str(usage.free) + '</free>')
+        f.write('\n<%used>' + str(int(usage.percent)) + '</%used>')
+        f.write('\n<fileSys>' + str(part.fstype) + '</fileSys>')
+        f.write('\n<mountPoint>' + str(part.mountpoint) + '</mountPoint>')
 
-    f.write("\n\n</log>\n")
+    f.write('\n\n</log>\n')
     f.close()
 
-# To check the system boot time
+# To capture the system boot time
 def bootTime():
     logPath = str('bootTime.log')
     f = open(logPath, 'a')
 
-    f.write("\n<log>")
-    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
-    f.write("\n<boottime>" + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S") + "</boottime>")
-    f.write("\n</log>\n")
+    f.write('\n<log>')
+    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
+    f.write('\n<boottime>' + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') + '</boottime>')
+    f.write('\n</log>\n')
     f.close()
 
 # The unofficial main function
@@ -333,7 +331,7 @@ def mainProg():
     # Navigate to 'logs' directory
     os.chdir('logs')
     
-    # Check if there is already a directory with current date "YYYY-MM-DD" format
+    # Check if there is already a directory with current date 'YYYY-MM-DD' format
     # Create the directory if it doesn't exist
     currentDate = str(datetime.date.today())
     if not os.path.isdir(currentDate):
@@ -348,71 +346,71 @@ def mainProg():
     logPath = str('logTracker.log')
     logTrack = open(logPath, 'a')
 
-    logTrack.write("\n<log>")
-    logTrack.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>\n")
+    logTrack.write('\n<log>')
+    logTrack.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>\n')
 
-    logTrack.write("\n<bootTime>")
+    logTrack.write('\n<bootTime>')
     try:
         bootTime()
-        logTrack.write("captured")
+        logTrack.write('captured')
     except:
-        logTrack.write("error")
-    logTrack.write("</bootTime>")
+        logTrack.write('error')
+    logTrack.write('</bootTime>')
 
-    logTrack.write("\n<processes>")
+    logTrack.write('\n<processes>')
     try:
         captureProcessList()
-        logTrack.write("captured")
+        logTrack.write('captured')
     except:
-        logTrack.write("error")
-    logTrack.write("</processes>")
+        logTrack.write('error')
+    logTrack.write('</processes>')
 
-    logTrack.write("\n<disks>")
+    logTrack.write('\n<disks>')
     try:
         captureDiskState()
-        logTrack.write("captured")
+        logTrack.write('captured')
     except:
-        logTrack.write("error")
-    logTrack.write("</disks>")
+        logTrack.write('error')
+    logTrack.write('</disks>')
 
-    logTrack.write("\n<networkInterfaces>")
+    logTrack.write('\n<networkInterfaces>')
     try:
         captureNetworkInterfaces()
-        logTrack.write("captured")
+        logTrack.write('captured')
     except:
-        logTrack.write("error")
-    logTrack.write("</networkInterfaces>")
+        logTrack.write('error')
+    logTrack.write('</networkInterfaces>')
 
-    logTrack.write("\n<sensors>")
+    logTrack.write('\n<sensors>')
     try:
         captureSensorState()
-        logTrack.write("captured")
+        logTrack.write('captured')
     except:
-        logTrack.write("error")
-    logTrack.write("</sensors>")
+        logTrack.write('error')
+    logTrack.write('</sensors>')
 
-    logTrack.write("\n<battery>")
+    logTrack.write('\n<battery>')
     try:
         captureBatteryState()
-        logTrack.write("captured")
+        logTrack.write('captured')
     except:
-        logTrack.write("error")
-    logTrack.write("</battery>")
+        logTrack.write('error')
+    logTrack.write('</battery>')
 
-    logTrack.write("\n\n</log>\n")
+    logTrack.write('\n\n</log>\n')
     logTrack.close()
 
 if __name__ == '__main__':
     
     # Check with the user on the number of executions and frequency of log collection.
-    numOfLogs = int(input("How many times would you like me to collect the logs: "))
-    freq = int(input("At what frequency should I collect the logs? Every (in seconds): "))
+    numOfLogs = int(input('How many times would you like me to collect the logs: '))
+    freq = int(input('At what frequency should I collect the logs? Every (in seconds): '))
     i = 1
 
     # Save the current directory to navigate back to avoid infinitely nested data folders.
     currentDirectory = os.getcwd()
 
-    # New instance of "You spin my head right round, right round."
+    # New instance of 'You spin my head right round, right round.'
     spinner = Spinner()
     
     # Run the program at specified frequency and number of times. And a bit of nice console output.
@@ -420,13 +418,13 @@ if __name__ == '__main__':
         mainProg()
         os.chdir(currentDirectory)
         clearScreen()
-        print("Statistics\n==========\n\nTotal logs to collect: %i\nWait interval (in seconds): %i" % (numOfLogs, freq))
-        print("\nLogs collected: %i\nLogs remaining: %i\n" % (i, numOfLogs - i))
+        print('Statistics\n==========\n\nTotal logs to collect: %i\nWait interval (in seconds): %i' % (numOfLogs, freq))
+        print('\nLogs collected: %i\nLogs remaining: %i\n' % (i, numOfLogs - i))
         if i != numOfLogs:
-            print("Countdown to next log collection: ")
+            print('Countdown to next log collection: ')
             spinner.start()
             countdown(freq)
             spinner.stop()
         else:
-            print("All logs have been captured and placed in \logs\%s\ directory.\n" % str(datetime.date.today()))
+            print('All logs have been captured and placed in \logs\%s\ directory.\n' % str(datetime.date.today()))
         i += 1
