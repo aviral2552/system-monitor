@@ -155,31 +155,8 @@ def captureSensorState():
                     entry.label or name, entry.current))
         f.close()
 
-# To capture current battery status including percentage, time left, charging state
-def captureBatteryState():
-    
-    logPath = str('battery.log')
-    f = open(logPath, 'a')
 
-    f.write("\n\n" + separator + "\n")
-    f.write(time.ctime() + "\n")
 
-    if not hasattr(psutil, "sensors_battery"):
-        f.write("\nPlatform or system is not supported.\n")
-    batt = psutil.sensors_battery()
-    if batt is None:
-        f.write("\nBattery not detected.\n")
-
-    f.write("\nCurrent charge:     %s%%" % round(batt.percent, 2))
-    if batt.power_plugged:
-        f.write("\nStatus:     %s" % (
-            "Charging" if batt.percent < 100 else "Fully charged"))
-        f.write("\nPlugged in: Yes")
-    else:
-        f.write("\nLeft:       %s" % secs2hours(batt.secsleft))
-        f.write("\nStatus:     %s" % "Discharging")
-        f.write("\nPlugged in: No")
-    f.close()
 
 # To capture state of all network interfaces
 def captureNetworkInterfaces():
@@ -222,6 +199,42 @@ def captureNetworkInterfaces():
         
     f.close()
 
+
+
+# To capture current battery status including percentage, time left, charging state
+def captureBatteryState():
+    
+    logPath = str('battery.log')
+    f = open(logPath, 'a')
+
+    f.write("\n<log>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+
+    if not hasattr(psutil, "sensors_battery"):
+        f.write("\n<supported>no</supported>")
+    else:
+        f.write("\n<supported>yes</supported>")
+    
+    batt = psutil.sensors_battery()
+    if batt is None:
+        f.write("\n<detected>no</detected>")
+    else:
+        f.write("\n<detected>yes</detected>")
+    
+    f.write("\n<charge>" +str(round(batt.percent, 2)) + "</charge>")
+
+    if batt.power_plugged:
+        if batt.percent < 100:
+            f.write("\n<status>charging</status>")
+        else:
+            f.write("\n<status>fully charged</status>")
+        f.write("\n<plugged>yes</plugged>")
+    else:
+        f.write("\n<remaining>" + str(secs2hours(batt.secsleft)) + "</remaining>")
+        f.write("\n<status>discharging</status>")
+        f.write("\n<plugged>no</plugged>")
+    f.write("\n</log>\n")
+    f.close()
 
 # To capture the current state of running processes on the system.
 # Run the script as admin to capture more processes.
