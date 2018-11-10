@@ -115,41 +115,6 @@ def secs2hours(secs):
     hh, mm = divmod(mm, 60)
     return "%d:%02d:%02d" % (hh, mm, ss)
 
-# To capture the current state of running processes on the system.
-# Run the script as admin to capture more processes.
-# Log will also write how many processes were inaccesible due to permission/access issues.
-def captureProcessList():
-
-    format = "%7s %7s %10s %7s %12s %12s %7s"
-    format2 = "%8s %8s %7.2f %7.2f %12s %12s %7s"
-
-    logPath = str('processes.log')
-    f = open(logPath, 'a')
-    f.write("\n\n" + separator + "\n")
-    f.write(time.ctime() + "\n")
-    f.write(format % ("PID", "NAME", "%CPU", "%MEM", "VMS", "RSS", "PATH"))
-    f.write("\n")
-    access = 0
-    noAccess = 0
-
-    for p in psutil.process_iter():
-        try:
-            pro_pid = p.pid
-            name = p.name()
-            cpu_percent = p.cpu_percent()/psutil.cpu_count()
-            mem_percent = p.memory_percent(memtype="rss")
-            rss  = str(p.memory_info().rss)
-            vms = str(p.memory_info().vms)
-            path = p.exe()
-
-            f.write(format2 % (pro_pid, name, cpu_percent, mem_percent, vms, rss, path))
-            access += 1
-            f.write("\n")
-        except psutil.AccessDenied:
-            noAccess += 1
-    
-    f.write("\nDumped %i processes successfully and couldn't access %i processes due to insufficient privileges." %(access, noAccess))
-    f.close()
 
 # To check the temprature and fan sensors.
 def captureSensorState():
@@ -255,6 +220,47 @@ def captureNetworkInterfaces():
             if addr.ptp:
                 f.write("\n      p2p       : %s" % addr.ptp)
         
+    f.close()
+
+
+# To capture the current state of running processes on the system.
+# Run the script as admin to capture more processes.
+# Log will also write how many processes were inaccesible due to permission/access issues.
+def captureProcessList():
+
+    logPath = str('processes.log')
+    f = open(logPath, 'a')
+
+    f.write("\n<log>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+    access = 0
+    noAccess = 0
+
+    for p in psutil.process_iter():
+        try:
+            pro_pid = p.pid
+            name = p.name()
+            cpu_percent = p.cpu_percent()/psutil.cpu_count()
+            mem_percent = p.memory_percent(memtype="rss")
+            rss  = str(p.memory_info().rss)
+            vms = str(p.memory_info().vms)
+            path = p.exe()
+
+            f.write("\n<pid>" + str(pro_pid) + "</pid>")
+            f.write("\n<name>" + str(name) + "</name>")
+            f.write("\n<%cpu>" + str(cpu_percent) + "</%cpu>")
+            f.write("\n<%mem>" + str(mem_percent) + "</%mem>")
+            f.write("\n<vms>" + str(vms) + "</vms>")
+            f.write("\n<rss>" + str(rss) + "</rss>")
+            f.write("\n<path>" + str(path) + "</path>")
+            f.write("\n")
+            access += 1
+        except psutil.AccessDenied:
+            noAccess += 1
+    
+    f.write("\n<captured>" + str(access) + "</captured>")
+    f.write("\n<skipped>" + str(noAccess) + "</skipped>")
+    f.write("\n</log>\n")
     f.close()
 
 # To capture disk and partition state
