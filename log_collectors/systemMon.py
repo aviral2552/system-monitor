@@ -32,13 +32,6 @@ import socket
 # Future implementation may include a consistent network bandwidth monitor, running in a separate thread.
 import threading
 
-# Standard separator of 80 neat hyphens for dividing captured logs in a day.
-separator = "-" * 80
-
-# For help with capturing network interfaces in captureNetworkInterfaces function.
-
-
-
 # You spin my head right round, right round.
 # On the console while waiting, right round round.
 class Spinner:
