@@ -39,13 +39,13 @@ separator = "-" * 80
 af_map = {
     socket.AF_INET: 'IPv4',
     socket.AF_INET6: 'IPv6',
-    psutil.AF_LINK: 'MAC',
+    #psutil.AF_LINK: 'MAC',
 }
 
 duplex_map = {
     psutil.NIC_DUPLEX_FULL: "full",
     psutil.NIC_DUPLEX_HALF: "half",
-    psutil.NIC_DUPLEX_UNKNOWN: "?",
+    psutil.NIC_DUPLEX_UNKNOWN: "unknown",
 }
 
 
@@ -115,15 +115,14 @@ def secs2hours(secs):
     hh, mm = divmod(mm, 60)
     return "%d:%02d:%02d" % (hh, mm, ss)
 
-
 # To check the temprature and fan sensors.
 def captureSensorState():
 
     logPath = str('sensors.log')
     f = open(logPath, 'a')
 
-    f.write("\n\n" + separator + "\n")
-    f.write(time.ctime() + "\n")
+    f.write("\n<log>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
 
     if hasattr(psutil, "sensors_temperatures"):
         temps = psutil.sensors_temperatures()
@@ -153,7 +152,9 @@ def captureSensorState():
             for entry in fans[name]:
                 f.write("\n        %-20s %s RPM" % (
                     entry.label or name, entry.current))
+        f.write("\n</log>\n")
         f.close()
+
 
 
 
@@ -164,40 +165,68 @@ def captureNetworkInterfaces():
     logPath = str('networkInterfaces.log')
     f = open(logPath, 'a')
 
-    f.write("\n\n" + separator + "\n")
-    f.write(time.ctime() + "\n")
+    f.write("\n<log>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
 
     stats = psutil.net_if_stats()
     io_counters = psutil.net_io_counters(pernic=True)
     for nic, addrs in psutil.net_if_addrs().items():
-        f.write("\n%s:" % (nic))
-        if nic in stats:
-            st = stats[nic]
-            f.write("\n    stats: ")
-            f.write("\tspeed=%sMB, duplex=%s, mtu=%s, up=%s" % (
-                st.speed, duplex_map[st.duplex], st.mtu,
-                "yes" if st.isup else "no"))
-        if nic in io_counters:
-            io = io_counters[nic]
-            f.write("\n    incoming: ")
-            f.write("\tbytes=%s, pkts=%s, errs=%s, drops=%s" % (
-                bytes2human(io.bytes_recv), io.packets_recv, io.errin,
-                io.dropin))
-            f.write("\n    outgoing: ")
-            f.write("\tbytes=%s, pkts=%s, errs=%s, drops=%s" % (
-                bytes2human(io.bytes_sent), io.packets_sent, io.errout,
-                io.dropout))
-        for addr in addrs:
-            f.write("\n    %-4s" % af_map.get(addr.family, addr.family))
-            f.write("address   : %s" % addr.address)
-            if addr.broadcast:
-                f.write("\n         broadcast : %s" % addr.broadcast)
-            if addr.netmask:
-                f.write("\n         netmask   : %s" % addr.netmask)
-            if addr.ptp:
-                f.write("\n      p2p       : %s" % addr.ptp)
+        keepCount = 0
         
+        for addr in addrs:
+            if addr.address is not None:
+                keepCount += 1
+
+        if keepCount == 3:
+            f.write("\n\n<name>" + str(nic) + "</name>")
+            if nic in stats:
+                st = stats[nic]
+            if st.isup is not None:
+                f.write("\n<active>yes</active>")
+            else:
+                f.write("\n<active>no</active>")
+            f.write("\n<speed>" + str(st.speed) + "MB</speed>")
+            f.write("\n<duplex>" + str(duplex_map[st.duplex]) + "</duplex>")
+            f.write("\n<mtu>" + str(st.mtu) + "</mtu>")
+
+            if nic in io_counters:
+                io = io_counters[nic]
+
+                f.write("\n<incomingBytes>" + str(io.bytes_recv) + "</incomingBytes>")
+                f.write("\n<incomingPackets>" + str(io.packets_recv) + "</incomingPackets>")
+                f.write("\n<incomingErrors>" + str(io.errin) + "</incomingErrors>")
+                f.write("\n<incomingDrops>" + str(io.dropin) + "</incomingDrops>")
+
+                f.write("\n<outgoingBytes>" + str(io.bytes_recv) + "</outgoingBytes>")
+                f.write("\n<outgoingPackets>" + str(io.packets_sent) + "</outgoingPackets>")
+                f.write("\n<outgoingErrors>" + str(io.errout) + "</outgoingErrors>")
+                f.write("\n<outgoingDrops>" + str(io.dropout) + "</outgoingDrops>")
+
+               
+            for addr in addrs:
+
+                f.write("\n<%-4s>" % af_map.get(addr.family, addr.family))
+                f.write(str(addr.address))
+                f.write("</%-4s>" % af_map.get(addr.family, addr.family))
+
+                if addr.broadcast:
+                    f.write("\n<%-4s_broadcast>" % af_map.get(addr.family, addr.family))
+                    f.write(str(addr.broadcast))
+                    f.write("</%-4s_broadcast>" % af_map.get(addr.family, addr.family))
+
+                if addr.netmask:
+                    f.write("\n<%-4s_netmask>" % af_map.get(addr.family, addr.family))
+                    f.write(str(addr.netmask))
+                    f.write("</%-4s_netmask>" % af_map.get(addr.family, addr.family))
+
+                if addr.ptp:
+                    f.write("\n<%-4s_p2p>" % af_map.get(addr.family, addr.family))
+                    f.write(str(addr.ptp))
+                    f.write("</%-4s_p2p>" % af_map.get(addr.family, addr.family))
+                    
+    f.write("\n\n</log>\n")
     f.close()
+
 
 
 
