@@ -216,35 +216,30 @@ def captureBatteryState():
         f.write("\nPlugged in: No")
     f.close()
 
-# To capture disk and partition state
-def captureDiskState():
+
 
     logPath = str('disks.log')
     f = open(logPath, 'a')
 
-    f.write("\n\n" + separator + "\n")
-    f.write(time.ctime() + "\n")
+    f.write("\n<log>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
 
-    templ = "%-17s %8s %8s %8s %5s%% %9s  %s"
-    f.write(templ % ("Device", "Total", "Used", "Free", "Use ", "Type",
-                   "Mount"))
     for part in psutil.disk_partitions(all=False):
         if os.name == 'nt':
             if 'cdrom' in part.opts or part.fstype == '':
-                # skip cd-rom drives with no disk in it; they may raise
-                # ENOENT, pop-up a Windows GUI error for a non-ready
-                # partition or just hang.
+                # skip cd-rom drives with no disk in it
                 continue
         usage = psutil.disk_usage(part.mountpoint)
-        f.write("\n")
-        f.write(templ % (
-            part.device,
-            bytes2human(usage.total),
-            bytes2human(usage.used),
-            bytes2human(usage.free),
-            int(usage.percent),
-            part.fstype,
-            part.mountpoint))
+
+        f.write("\n<name>" + str(part.device) + "</name>")
+        f.write("\n<size>" + str(bytes2human(usage.total)) + "</size>")
+        f.write("\n<used>" + str(bytes2human(usage.used)) + "</used>")
+        f.write("\n<free>" + str(bytes2human(usage.free)) + "</free>")
+        f.write("\n<%used>" + str(int(usage.percent)) + "</%used>")
+        f.write("\n<fileSys>" + str(part.fstype) + "</fileSys>")
+        f.write("\n<mountPoint>" + str(part.mountpoint) + "</mountPoint>")
+
+    f.write("\n</log>\n")
     f.close()
 
 # To capture state of all network interfaces
@@ -288,14 +283,18 @@ def captureNetworkInterfaces():
         
     f.close()
 
+# To capture disk and partition state
+def captureDiskState():
+
 # To check the system boot time
 def bootTime():
     logPath = str('bootTime.log')
     f = open(logPath, 'a')
 
-    f.write("\n\n" + separator + "\n")
-    f.write(time.ctime() + "\n")
-    f.write("\nCurrent system boot time is: " + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"))
+    f.write("\n<log>")
+    f.write("\n<capturetime>" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "</capturetime>")
+    f.write("\n<boottime>" + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S") + "</boottime>")
+    f.write("\n</log>")
     f.close()
 
 # The unofficial main function
