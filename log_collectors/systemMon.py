@@ -346,7 +346,7 @@ def bootTime():
     f.write('\n<osRelease>' + str(platform.release()) + '</osRelease>')
     f.write('\n<osPlatform>' + str(platform.platform()) + '</osPlatform>')
     f.write('\n<osDescription>' + str(platform.version()) + '</osDescription>')
-    f.write('\n<boottime>' + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') + '</boottime>')
+    f.write('\n<bootTime>' + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') + '</bootTime>')
     f.write('\n</log>\n')
     f.close()
 
