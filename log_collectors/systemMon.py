@@ -233,6 +233,9 @@ def captureBatteryState():
     f.write('\n<charge>' +str(round(batt.percent, 2)) + '</charge>')
 
     if batt.power_plugged:
+        # Unlimited juice.... as per psutil apparently
+        #f.write('\n<remaining>' + str(batt.secsleft) + '</remaining>')
+        f.write('\n<remaining>unlimited</remaining>')
         if batt.percent < 100:
             f.write('\n<status>charging</status>')
         else:
