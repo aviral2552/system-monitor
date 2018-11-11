@@ -11,14 +11,15 @@
 #
 ###
 
-# For navigating directories.
+# For navigating directories and OS version detection.
+# Using psutil for OS detection due to POSIX/macOS conflict in os.name
 import os
 import sys
+import platform
 
 # For capturing most data points.
 # Intentionally not using anything else other than psutil to maintain cross-platform compatibility.
 import psutil
-from pprint import pprint as pp
 
 # All logs must come with time!
 import time
@@ -341,7 +342,10 @@ def bootTime():
 
     f.write('\n<log>')
     f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
-    f.write('\n<os>' + setOS + '</os>')
+    f.write('\n<osFamily>' + setOS + '</osFamily>')
+    f.write('\n<osRelease>' + str(platform.release()) + '</osRelease>')
+    f.write('\n<osPlatform>' + str(platform.platform()) + '</osPlatform>')
+    f.write('\n<osDescription>' + str(platform.version()) + '</osDescription>')
     f.write('\n<boottime>' + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') + '</boottime>')
     f.write('\n</log>\n')
     f.close()
