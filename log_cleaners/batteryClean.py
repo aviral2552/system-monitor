@@ -5,8 +5,8 @@
 ################################################################
 
 import csv
-import datetime
 import re
+
 import pandas as pd
 
 f = open('battery.log','r')
@@ -19,14 +19,14 @@ remaining = ['remaining']
 status = ['status']
 plugged = ['plugged']
 
-i = 11
+i = 10
 
 for line in f:
   
-        if str(line).startswith('<log>') == True:
+        if line.startswith('<log>') == True:
                 i = 1
                 continue
-        if str(line).startswith('</log>') == True:
+        if line.startswith('</log>') == True:
                 i = 8
                 continue
         if i == 1:
@@ -45,6 +45,8 @@ for line in f:
                 plugged.append(line)        
         i += 1
 
+f.close()
+
 df = pd.DataFrame(list(zip(captureTime, supported, detected, charge, remaining, status, plugged)))
 
 stuffToIgnore = ['<captureTime>', '</captureTime>',
@@ -58,9 +60,5 @@ stuffToIgnore = ['<captureTime>', '</captureTime>',
 
 for stuff in stuffToIgnore:
         df = df.replace(stuff, "", regex = True)
-        
-#df['timeStamp'] = pd.to_datetime(df['timeStamp'])
-
-print(df)        
-f.close()
-df.to_csv('battery.csv')
+              
+df.to_csv('battery.csv', index = False, header = False)
