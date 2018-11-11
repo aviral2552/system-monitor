@@ -32,9 +32,6 @@ import socket
 # Future implementation may include a consistent network bandwidth monitor, running in a separate thread.
 import threading
 
-# Determine the number of 'top' processes per CPU, memeory, IO and file descriptor to capture
-top = 10
-
 # For the spinner on the console
 class Spinner:
     busy = False
