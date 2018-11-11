@@ -18,6 +18,7 @@ import sys
 # For capturing most data points.
 # Intentionally not using anything else other than psutil to maintain cross-platform compatibility.
 import psutil
+from pprint import pprint as pp
 
 # All logs must come with time!
 import time
@@ -30,6 +31,9 @@ import socket
 # Currently only being used to run a spinner at console while waiting.
 # Future implementation may include a consistent network bandwidth monitor, running in a separate thread.
 import threading
+
+# Determine the number of 'top' processes per CPU, memeory, IO and file descriptor to capture
+top = 10
 
 # For the spinner on the console
 class Spinner:
@@ -131,14 +135,14 @@ def captureNetworkInterfaces():
     io_counters = psutil.net_io_counters(pernic=True)
     
     # For iterating through addresses
-    af_map = {
+    afMap = {
     socket.AF_INET: 'IPv4',
     socket.AF_INET6: 'IPv6',
     psutil.AF_LINK: 'MAC',
     }
 
     # For looking up duplex state
-    duplex_map = {
+    duplexMap = {
         psutil.NIC_DUPLEX_FULL: 'full',
         psutil.NIC_DUPLEX_HALF: 'half',
         psutil.NIC_DUPLEX_UNKNOWN: 'unknown',
@@ -160,7 +164,7 @@ def captureNetworkInterfaces():
             else:
                 f.write('\n<active>no</active>')
             f.write('\n<speed>' + str(st.speed) + 'MB</speed>')
-            f.write('\n<duplex>' + str(duplex_map[st.duplex]) + '</duplex>')
+            f.write('\n<duplex>' + str(duplexMap[st.duplex]) + '</duplex>')
             f.write('\n<mtu>' + str(st.mtu) + '</mtu>')
 
             if nic in io_counters:
@@ -179,7 +183,7 @@ def captureNetworkInterfaces():
                
             for addr in addrs:
 
-                curAddr = str(af_map.get(addr.family, addr.family))
+                curAddr = str(afMap.get(addr.family, addr.family))
 
                 if currentDirectory.startswith('IP', 0, 1):
                     f.write('\n<%-4s>' % curAddr)
@@ -259,19 +263,25 @@ def captureProcessList():
     for p in psutil.process_iter():
         try:
             pro_pid = p.pid
+            parent = p.ppid()
             name = p.name()
             cpu_percent = p.cpu_percent()/psutil.cpu_count()
             mem_percent = p.memory_percent(memtype='rss')
             rss  = str(p.memory_info().rss)
             vms = str(p.memory_info().vms)
             path = p.exe()
+            user = p.username()
+            priority = p.nice()
 
             f.write('\n<pid>' + str(pro_pid) + '</pid>')
+            f.write('\n<parentPID>' + str(parent) + '</parentPID>')
             f.write('\n<name>' + str(name) + '</name>')
             f.write('\n<%cpu>' + str(cpu_percent) + '</%cpu>')
+            f.write('\n<priority>' + str(priority) + '</priority>')
             f.write('\n<%mem>' + str(mem_percent) + '</%mem>')
             f.write('\n<vms>' + str(vms) + '</vms>')
             f.write('\n<rss>' + str(rss) + '</rss>')
+            f.write('\n<user>' + str(user) + '</user>')
             f.write('\n<path>' + str(path) + '</path>')
             f.write('\n')
             access += 1
@@ -314,8 +324,27 @@ def bootTime():
     logPath = str('bootTime.log')
     f = open(logPath, 'a')
 
+    osMap = {
+        'POSIX': psutil.POSIX,
+        'Windows': psutil.WINDOWS,
+        'Linux': psutil.LINUX,
+        'macOS': psutil.MACOS,
+        'FreeBSD': psutil.FREEBSD,
+        'NetBSD': psutil.NETBSD,
+        'OpenBSD': psutil.OPENBSD,
+        'BSD': psutil.BSD,
+        'Sun OS': psutil.SUNOS,
+        'AIX': psutil.AIX
+    }
+    setOS = 'unknown'
+
+    for key, value in osMap.items():
+        if value == True:
+            setOS = str(key)
+
     f.write('\n<log>')
     f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
+    f.write('\n<os>' + setOS + '</os>')
     f.write('\n<boottime>' + datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') + '</boottime>')
     f.write('\n</log>\n')
     f.close()
