@@ -10,7 +10,6 @@
 
 
 import csv
-import datetime
 import re
 
 import pandas as pd
@@ -28,10 +27,10 @@ i = 10
 
 for line in f:
   
-        if str(line).startswith('<log>') == True:
+        if line.startswith('<log>') == True:
                 i = 1
                 continue
-        if str(line).startswith('</log>') == True:
+        if line.startswith('</log>') == True:
                 i = 7
                 continue
 
@@ -63,9 +62,5 @@ stuffToIgnore = ['<captureTime>', '</captureTime>',
 
 for stuff in stuffToIgnore:
         df = df.replace(stuff, "", regex = True)
-
-# KeyValue error here!!!!!!
-# Not needed right now, but will need to figure out what is wrong
-#df['timeStamp'] = pd.to_datetime(df['timeStamp'])
 
 df.to_csv('bootTime.csv', index = False, header = False)
