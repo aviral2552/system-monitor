@@ -33,6 +33,11 @@ import socket
 # Future implementation may include a consistent network bandwidth monitor, running in a separate thread.
 import threading
 
+# Defining the global variables
+numOfLogs = 0
+freq = 0
+machineID = 0
+
 # For the spinner on the console
 class Spinner:
     busy = False
@@ -77,6 +82,36 @@ def countdown(t):
         print(timeformat, end='\r')
         time.sleep(1)
         t -= 1
+
+def yesOrNo(checkMe):
+    if checkMe == 'y' or checkMe == 'Y' or checkMe == 'yes' or checkMe == 'Yes' or checkMe == 'YES':
+        return True
+
+def readPreferences():
+    global numOfLogs
+    global freq
+    
+    prefFile = str('preferences.cfg')
+    pref = []
+
+    with open(prefFile) as f:
+        for line in f:
+            pref.append(int((line.split('=')[1]).strip()))
+
+    print('Current runtime config\n======================\n\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(pref[0], pref[1]))
+    
+    print('Would you like to start logging with the default configuration? (\033[1my\033[0;0m/n): ')
+    userInput = input().strip()
+    if yesOrNo(userInput):
+        numOfLogs = pref[0]
+        freq = pref[1]
+    else:
+        numOfLogs = int(input('How many times would you like me to collect the logs: '))
+        freq = int(input('At what frequency should I collect the logs? Every (in seconds): '))
+        print('\nNew runtime preferences will be saved and the logging will start now.')
+        f = open(prefFile, 'w')
+        f.write('numOfLogs=' + str(numOfLogs) + '\nfreq=' + str(freq) + '\nmachineID=' + str(pref[2]))
+        f.close()
 
 ### Log capturing modules start now
 
@@ -385,19 +420,19 @@ def mainProg():
     logTrack.write('\n\n</log>\n')
     logTrack.close()
 
-if __name__ == '__main__':
-    
-    # Check with the user on the number of executions and frequency of log collection.
-    numOfLogs = int(input('How many times would you like me to collect the logs: '))
-    freq = int(input('At what frequency should I collect the logs? Every (in seconds): '))
-    i = 1
+def initiator():
 
+    # Read or set runtime preferences
+    readPreferences()
+    time.sleep(3)
+    
     # Save the current directory to navigate back to avoid infinitely nested data folders.
     currentDirectory = os.getcwd()
 
     # New instance of 'You spin my head right round, right round.'
     spinner = Spinner()
     
+    i = 1
     # Run the program at specified frequency and number of times. And a bit of nice console output.
     while i <= numOfLogs:
         mainProg()
@@ -413,3 +448,6 @@ if __name__ == '__main__':
         else:
             print('All logs have been captured and placed in \logs\%s\ directory.\n' % str(datetime.date.today()))
         i += 1
+
+if __name__ == '__main__':
+    initiator()
