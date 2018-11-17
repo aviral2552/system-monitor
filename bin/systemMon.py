@@ -105,11 +105,11 @@ def readPreferences():
         numOfLogs = pref[0]
         freq = pref[1]
     else:
-        numOfLogs = int(input('How many times would you like me to collect the logs: '))
+        numOfLogs = int(input('\nHow many times would you like me to collect the logs: '))
         freq = int(input('At what frequency should I collect the logs? Every (in seconds): '))
         print('\nNew runtime preferences will be saved and the logging will start now.')
         f = open(prefFile, 'w')
-        f.write('numOfLogs=' + str(numOfLogs) + '\nfreq=' + str(freq) + '\nmachineID=' + str(pref[2]))
+        f.write('numberOfLogs=' + str(numOfLogs) + '\ncollectionFrequency=' + str(freq) + '\nmachineID=' + str(pref[2]))
         f.close()
         time.sleep(3)
 
