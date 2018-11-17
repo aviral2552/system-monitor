@@ -57,17 +57,19 @@ def generateForMacOS():
 
     # truncate and store the hexdigest as machineID
     global machineID
-    machineID = machineHash.hexdigest()[0:10]
+    machineID = machineHash.hexdigest()[0:32]
     writeMachineID(machineID)
 
 # Generates machine ID for Windows based systems
 
 def generateForWindows():
     # first storage drive's serial number
-    sysStorage = subprocess.check_output('wmic DISKDRIVE get SerialNumber').decode().split('\n')[1].strip()
+    storageCMD = "wmic DISKDRIVE get SerialNumber"
+    sysStorage = subprocess.check_output(storageCMD).decode().split('\n')[1].strip()
 
     # system's UUID
-    sysUUID = subprocess.check_output('wmic csproduct get UUID').decode().split('\n')[1].strip()
+    uuidCMD = "wmic csproduct get UUID"
+    sysUUID = subprocess.check_output(uuidCMD).decode().split('\n')[1].strip()
 
     # system's hardware address as a 48-bit positive integer
     sysMACAddr = uuid.getnode()
@@ -79,7 +81,7 @@ def generateForWindows():
 
     # truncate and store the hexdigest as machineID
     global machineID
-    machineID = machineHash.hexdigest()[0:10]
+    machineID = machineHash.hexdigest()[0:32]
     writeMachineID(machineID)
 
 # Generates machine ID for Linux based systems
