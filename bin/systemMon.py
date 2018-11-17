@@ -95,11 +95,13 @@ def readPreferences():
 
     with open(prefFile) as f:
         for line in f:
-            pref.append(int((line.split('=')[1]).strip()))
+            pref.append((line.split('=')[1]).strip())
+        pref[0] = int(pref[0])
+        pref[1] = int(pref[1])
 
     print('Current runtime config\n======================\n\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(pref[0], pref[1]))
     
-    print('\nWould you like to start logging with the default configuration? (\033[1my\033[0;0m/n): ')
+    print('\nWould you like to start logging with the default configuration? (Y/n): ')
     userInput = input().strip()
     if yesOrNo(userInput):
         numOfLogs = pref[0]
