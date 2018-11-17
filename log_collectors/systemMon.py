@@ -3,8 +3,8 @@
 # Part of Project Aradia
 #
 # Author: Lame Hacker (https://github.com/thelamehacker)
-# Last update: 10 November 2018
-# Version: 0.3a
+# Last update: 17 November 2018
+# Version: 0.4a
 #
 # Attributions:
 # https://psutil.readthedocs.io/
@@ -78,47 +78,7 @@ def countdown(t):
         time.sleep(1)
         t -= 1
 
-# To check the temprature and fan sensors.
-# This module currently only works on Linux platforms due to limitation of psutil
-# And the output is not on parity with the rest of the modules.
-def captureSensorState():
-
-    logPath = str('sensors.log')
-    f = open(logPath, 'a')
-
-    f.write('\n<log>')
-    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
-
-    if hasattr(psutil, 'sensors_temperatures'):
-        temps = psutil.sensors_temperatures()
-    else:
-        temps = {}
-    if hasattr(psutil, 'sensors_fans'):
-        fans = psutil.sensors_fans()
-    else:
-        fans = {}
-
-    if not any((temps, fans)):
-        f.write("\nCan't read any temperature or fan infomation.")
-
-    names = set(list(temps.keys()) + list(fans.keys()))
-    for name in names:
-        f.write(name)
-        # Temperatures.
-        if name in temps:
-            f.write('\n    Temperatures:')
-            for entry in temps[name]:
-                f.write('\n        %-20s %s°C (high=%s°C, critical=%s°C)' % (
-                    entry.label or name, entry.current, entry.high,
-                    entry.critical))
-        # Fans.
-        if name in fans:
-            f.write('\n    Fans:')
-            for entry in fans[name]:
-                f.write('\n        %-20s %s RPM' % (
-                    entry.label or name, entry.current))
-    f.write('\n</log>\n')
-    f.close()
+### Log capturing modules start now
 
 # To capture state of all network interfaces
 def captureNetworkInterfaces():
@@ -413,14 +373,6 @@ def mainProg():
     except:
         logTrack.write('error')
     logTrack.write('</networkInterfaces>')
-
-    logTrack.write('\n<sensors>')
-    try:
-        captureSensorState()
-        logTrack.write('captured')
-    except:
-        logTrack.write('error')
-    logTrack.write('</sensors>')
 
     logTrack.write('\n<battery>')
     try:
