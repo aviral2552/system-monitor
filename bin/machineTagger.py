@@ -17,9 +17,9 @@ def readPreferences():
 
     with open(prefFile) as f:
         for line in f:
-            pref.append(int((line.split('=')[1]).strip()))
+            pref.append((line.split('=')[1]).strip())
     
-    if pref[2] == 0:
+    if pref[2] == '0':
         generateMachineID()
 
 # Identifying the operating system and calling appropriate function to generate the machine ID
