@@ -99,7 +99,7 @@ def readPreferences():
 
     print('Current runtime config\n======================\n\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(pref[0], pref[1]))
     
-    print('Would you like to start logging with the default configuration? (\033[1my\033[0;0m/n): ')
+    print('\nWould you like to start logging with the default configuration? (\033[1my\033[0;0m/n): ')
     userInput = input().strip()
     if yesOrNo(userInput):
         numOfLogs = pref[0]
@@ -111,6 +111,7 @@ def readPreferences():
         f = open(prefFile, 'w')
         f.write('numOfLogs=' + str(numOfLogs) + '\nfreq=' + str(freq) + '\nmachineID=' + str(pref[2]))
         f.close()
+        time.sleep(3)
 
 ### Log capturing modules start now
 
@@ -350,8 +351,12 @@ def bootTime():
 # The unofficial main function
 def mainProg():
 
+    # Moving to the parent directory of bin
+    os.chdir("..")
+
     # Check if 'logs' directory exist at current path
     # Create 'logs' directory if it doesn't already exist
+    
     if not os.path.isdir('logs'):
         os.system('mkdir logs')
     
@@ -423,16 +428,15 @@ def initiator():
 
     # Read or set runtime preferences
     readPreferences()
-    time.sleep(3)
     
     # Save the current directory to navigate back to avoid infinitely nested data folders.
     currentDirectory = os.getcwd()
 
-    # New instance of 'You spin my head right round, right round.'
+    # Just a spinner to keep the user entertained and perplexed
     spinner = Spinner()
     
     i = 1
-    # Run the program at specified frequency and number of times. And a bit of nice console output.
+    # Run the program at specified frequency and number of times. And a touch of some nice console output magic.
     while i <= numOfLogs:
         mainProg()
         os.chdir(currentDirectory)
