@@ -1,6 +1,10 @@
+import hashlib
+import os
 import platform
+import subprocess
+import uuid
 
-machineID = 0
+machineID = ''
 pref = []
 prefFile = str('preferences.cfg')
 
@@ -23,10 +27,10 @@ def generateMachineID():
     
     mySys = platform.system()
 
-    if mySys == 'Darwin':
-        generateForMacOS()
-    elif mySys == 'Windows':
+    if mySys == 'Windows':
         generateForWindows()
+    elif mySys == 'Darwin':
+        generateForMacOS()
     elif mySys == 'Linux':
         generateForLinux()
 
@@ -38,7 +42,24 @@ def generateForMacOS():
 # Generates machine ID for Windows based systems
 
 def generateForWindows():
-    print('Placeholder')
+    # first storage drive's serial number
+    sysStorage = subprocess.check_output('wmic DISKDRIVE get SerialNumber').decode().split('\n')[1].strip()
+
+    # system's UUID
+    sysUUID = subprocess.check_output('wmic csproduct get UUID').decode().split('\n')[1].strip()
+
+    # system's hardware address as a 48-bit positive integer
+    sysMACAddr = uuid.getnode()
+
+    # create a new sha3_512 object
+    machineHash = hashlib.sha3_512()
+    # encode as utf-8 and add storage serial number, system UUID and MAC address and hash it
+    machineHash.update(str(sysStorage).encode('utf-8') + str(sysUUID).encode('utf-8') + str(sysMACAddr).encode('utf-8'))
+
+    # truncate and store the hexdigest as machineID
+    global machineID
+    machineID = machineHash.hexdigest()[0:10]
+    writeMachineID(machineID)
 
 # Generates machine ID for Linux based systems
 
