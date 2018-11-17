@@ -36,7 +36,6 @@ import threading
 # Defining the global variables
 numOfLogs = 0
 freq = 0
-machineID = 0
 
 # For the spinner on the console
 class Spinner:
