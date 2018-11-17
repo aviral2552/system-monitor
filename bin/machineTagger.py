@@ -37,7 +37,28 @@ def generateMachineID():
 # Generates machine ID for macOS based systems
 
 def generateForMacOS():
-    print('Placeholder')
+    # first storage drive's serial number
+    storageCMD = "/usr/sbin/diskutil info / | /usr/bin/awk '$0 ~ /UUID/ { print $3 }'"
+    sysStorage,error = subprocess.Popen(storageCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
+    sysStorage = sysStorage.decode().split('\n')[0].strip()
+
+    # system's serial number
+    uuidCMD = "system_profiler SPHardwareDataType | grep -i 'Serial Number (system):' | awk '{print $4}'"
+    sysUUID,error = subprocess.Popen(uuidCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
+    sysUUID = sysUUID.decode().split('\n')[0].strip()
+
+    # system's hardware address as a 48-bit positive integer
+    sysMACAddr = uuid.getnode()
+
+    # create a new sha3_512 object
+    machineHash = hashlib.sha3_512()
+    # encode as utf-8 and add storage serial number, system UUID and MAC address and hash it
+    machineHash.update(str(sysStorage).encode('utf-8') + str(sysUUID).encode('utf-8') + str(sysMACAddr).encode('utf-8'))
+
+    # truncate and store the hexdigest as machineID
+    global machineID
+    machineID = machineHash.hexdigest()[0:10]
+    writeMachineID(machineID)
 
 # Generates machine ID for Windows based systems
 
