@@ -71,7 +71,7 @@ def generateForLinux():
 def writeMachineID(newID):
 
     f = open(prefFile, 'w')
-    f.write('numOfLogs=' + str(pref[0]) + '\nfreq=' + str(pref[1]) + '\nmachineID=' + str(newID))
+    f.write('numberOfLogs=' + str(pref[0]) + '\ncollectionFrequency=' + str(pref[1]) + '\nmachineID=' + str(newID))
     f.close()
 
 if __name__ == '__main__':
