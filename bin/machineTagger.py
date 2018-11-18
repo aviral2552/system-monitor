@@ -19,8 +19,8 @@ def readPreferences():
         for line in f:
             pref.append((line.split('=')[1]).strip())
     
-    if pref[2] == '0':
-        generateMachineID()
+    if pref[2] != machineID:
+        writeMachineID(machineID)
 
 # Identifying the operating system and calling appropriate function to generate the machine ID
 def generateMachineID():
@@ -58,7 +58,6 @@ def generateForMacOS():
     # truncate and store the hexdigest as machineID
     global machineID
     machineID = machineHash.hexdigest()[0:32]
-    writeMachineID(machineID)
 
 # Generates machine ID for Windows based systems
 
@@ -82,7 +81,6 @@ def generateForWindows():
     # truncate and store the hexdigest as machineID
     global machineID
     machineID = machineHash.hexdigest()[0:32]
-    writeMachineID(machineID)
 
 # Generates machine ID for Linux based systems
 
@@ -98,4 +96,5 @@ def writeMachineID(newID):
     f.close()
 
 if __name__ == '__main__':
+    generateMachineID()
     readPreferences()
