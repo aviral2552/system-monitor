@@ -4,12 +4,12 @@ import platform
 import subprocess
 import uuid
 
+# Global variables to hold reused values across the program
 machineID = ''
 pref = []
 prefFile = str('preferences.cfg')
 
-# Reading the preferences file and generating machine ID if the value is 0
-
+# Reading the preferences file and writing machineID if it looks different
 def readPreferences():
    
     global machineID
@@ -35,8 +35,8 @@ def generateMachineID():
     elif mySys == 'Linux':
         generateForLinux()
 
-# Generates machine ID for macOS based systems
 
+# Generates machine ID for macOS based systems
 def generateForMacOS():
     # first storage drive's serial number
     storageCMD = "/usr/sbin/diskutil info / | /usr/bin/awk '$0 ~ /UUID/ { print $3 }'"
@@ -63,8 +63,8 @@ def generateForMacOS():
     # Now let's crosscheck the preferences file
     readPreferences()
 
-# Generates machine ID for Windows based systems
 
+# Generates machine ID for Windows based systems
 def generateForWindows():
     # first storage drive's serial number
     storageCMD = "wmic DISKDRIVE get SerialNumber"
@@ -89,8 +89,8 @@ def generateForWindows():
     # Now let's crosscheck the preferences file
     readPreferences()
 
-# Generates machine ID for Linux based systems
 
+# Generates machine ID for Linux based systems
 def generateForLinux():
     # first storage drive's serial number
     storageCMD = "lsblk --nodeps -no serial"
@@ -117,13 +117,13 @@ def generateForLinux():
     # Now let's crosscheck the preferences file
     readPreferences()
 
-# Writes the new machine ID to the preferences file
 
+# Writes the new machine ID to the preferences file
 def writeMachineID(newID):
 
-    f = open(prefFile, 'w')
-    f.write('numberOfLogs=' + str(pref[0]) + '\ncollectionFrequency=' + str(pref[1]) + '\nmachineID=' + str(newID))
-    f.close()
+    userPreferences = open(prefFile, 'w')
+    userPreferences.write('numberOfLogs=' + str(pref[0]) + '\ncollectionFrequency=' + str(pref[1]) + '\nmachineID=' + str(newID))
+    userPreferences.close()
 
 if __name__ == '__main__':
     generateMachineID()
