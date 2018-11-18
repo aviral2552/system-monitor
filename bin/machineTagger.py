@@ -19,6 +19,7 @@ def readPreferences():
         for line in f:
             pref.append((line.split('=')[1]).strip())
     
+    # If the machineID in preferences file is different from the newly generated one, write the new machine ID to preferences file
     if pref[2] != machineID:
         writeMachineID(machineID)
 
@@ -59,6 +60,9 @@ def generateForMacOS():
     global machineID
     machineID = machineHash.hexdigest()[0:32]
 
+    # Now let's crosscheck the preferences file
+    readPreferences()
+
 # Generates machine ID for Windows based systems
 
 def generateForWindows():
@@ -81,6 +85,9 @@ def generateForWindows():
     # truncate and store the hexdigest as machineID
     global machineID
     machineID = machineHash.hexdigest()[0:32]
+
+    # Now let's crosscheck the preferences file
+    readPreferences()
 
 # Generates machine ID for Linux based systems
 
@@ -107,6 +114,9 @@ def generateForLinux():
     global machineID
     machineID = machineHash.hexdigest()[0:32]
 
+    # Now let's crosscheck the preferences file
+    readPreferences()
+
 # Writes the new machine ID to the preferences file
 
 def writeMachineID(newID):
@@ -117,4 +127,3 @@ def writeMachineID(newID):
 
 if __name__ == '__main__':
     generateMachineID()
-    readPreferences()
