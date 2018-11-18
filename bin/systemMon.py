@@ -180,7 +180,7 @@ def captureNetworkInterfaces():
 
                 curAddr = str(afMap.get(addr.family, addr.family))
 
-                if currentDirectory.startswith('IP', 0, 1):
+                if curAddr.startswith('IP', 0, 1):
                     f.write('\n<%-4s>' % curAddr)
                     f.write(str(addr.address))
                     f.write('</%-4s>' % curAddr)
