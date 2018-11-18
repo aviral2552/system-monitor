@@ -85,7 +85,27 @@ def generateForWindows():
 # Generates machine ID for Linux based systems
 
 def generateForLinux():
-    print('Placeholder')
+    # first storage drive's serial number
+    storageCMD = "lsblk --nodeps -no serial"
+    sysStorage,error = subprocess.Popen(storageCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
+    sysStorage = sysStorage.decode().split('\n')[0].strip()
+
+    # system's UUID from message buffer of the kernel
+    uuidCMD = 'dmesg | grep UUID | grep "Kernel" | sed "s/.*UUID=//g" | sed "s/\ ro\ quiet.*//g"'
+    sysUUID,error = subprocess.Popen(uuidCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()
+    sysUUID = sysUUID.decode().split(' ')[0].strip()
+
+    # system's hardware address as a 48-bit positive integer
+    sysMACAddr = uuid.getnode()
+
+    # create a new sha3_512 object
+    machineHash = hashlib.sha3_512()
+    # encode as utf-8 and add storage serial number, system UUID and MAC address and hash it
+    machineHash.update(str(sysStorage).encode('utf-8') + str(sysUUID).encode('utf-8') + str(sysMACAddr).encode('utf-8'))
+
+    # truncate and store the hexdigest as machineID
+    global machineID
+    machineID = machineHash.hexdigest()[0:32]
 
 # Writes the new machine ID to the preferences file
 
