@@ -3,8 +3,8 @@
 # Part of Project Aradia
 #
 # Author: Lame Hacker (https://github.com/thelamehacker)
-# Last update: 10 November 2018
-# Version: 0.3a
+# Last update: 17 November 2018
+# Version: 0.4a
 #
 # Attributions:
 # https://psutil.readthedocs.io/
@@ -32,6 +32,10 @@ import socket
 # Currently only being used to run a spinner at console while waiting.
 # Future implementation may include a consistent network bandwidth monitor, running in a separate thread.
 import threading
+
+# Defining the global variables
+numOfLogs = 0
+freq = 0
 
 # For the spinner on the console
 class Spinner:
@@ -78,47 +82,40 @@ def countdown(t):
         time.sleep(1)
         t -= 1
 
-# To check the temprature and fan sensors.
-# This module currently only works on Linux platforms due to limitation of psutil
-# And the output is not on parity with the rest of the modules.
-def captureSensorState():
+def yesOrNo(checkMe):
+    if checkMe == 'y' or checkMe == 'Y' or checkMe == 'yes' or checkMe == 'Yes' or checkMe == 'YES':
+        return True
 
-    logPath = str('sensors.log')
-    f = open(logPath, 'a')
+def readPreferences():
+    global numOfLogs
+    global freq
+    
+    prefFile = str('preferences.cfg')
+    pref = []
 
-    f.write('\n<log>')
-    f.write('\n<captureTime>' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '</captureTime>')
+    with open(prefFile) as f:
+        for line in f:
+            pref.append((line.split('=')[1]).strip())
+        pref[0] = int(pref[0])
+        pref[1] = int(pref[1])
 
-    if hasattr(psutil, 'sensors_temperatures'):
-        temps = psutil.sensors_temperatures()
+    print('Current runtime config\n======================\n\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(pref[0], pref[1]))
+    
+    print('\nWould you like to start logging with the default configuration? (Y/n): ')
+    userInput = input().strip()
+    if yesOrNo(userInput):
+        numOfLogs = pref[0]
+        freq = pref[1]
     else:
-        temps = {}
-    if hasattr(psutil, 'sensors_fans'):
-        fans = psutil.sensors_fans()
-    else:
-        fans = {}
+        numOfLogs = int(input('\nHow many times would you like me to collect the logs: '))
+        freq = int(input('At what frequency should I collect the logs? Every (in seconds): '))
+        print('\nNew runtime preferences will be saved and the logging will start now.')
+        f = open(prefFile, 'w')
+        f.write('numberOfLogs=' + str(numOfLogs) + '\ncollectionFrequency=' + str(freq) + '\nmachineID=' + str(pref[2]))
+        f.close()
+        time.sleep(3)
 
-    if not any((temps, fans)):
-        f.write("\nCan't read any temperature or fan infomation.")
-
-    names = set(list(temps.keys()) + list(fans.keys()))
-    for name in names:
-        f.write(name)
-        # Temperatures.
-        if name in temps:
-            f.write('\n    Temperatures:')
-            for entry in temps[name]:
-                f.write('\n        %-20s %s°C (high=%s°C, critical=%s°C)' % (
-                    entry.label or name, entry.current, entry.high,
-                    entry.critical))
-        # Fans.
-        if name in fans:
-            f.write('\n    Fans:')
-            for entry in fans[name]:
-                f.write('\n        %-20s %s RPM' % (
-                    entry.label or name, entry.current))
-    f.write('\n</log>\n')
-    f.close()
+### Log capturing modules start now
 
 # To capture state of all network interfaces
 def captureNetworkInterfaces():
@@ -183,7 +180,7 @@ def captureNetworkInterfaces():
 
                 curAddr = str(afMap.get(addr.family, addr.family))
 
-                if currentDirectory.startswith('IP', 0, 1):
+                if curAddr.startswith('IP', 0, 1):
                     f.write('\n<%-4s>' % curAddr)
                     f.write(str(addr.address))
                     f.write('</%-4s>' % curAddr)
@@ -356,8 +353,12 @@ def bootTime():
 # The unofficial main function
 def mainProg():
 
+    # Moving to the parent directory of bin
+    os.chdir("..")
+
     # Check if 'logs' directory exist at current path
     # Create 'logs' directory if it doesn't already exist
+    
     if not os.path.isdir('logs'):
         os.system('mkdir logs')
     
@@ -414,14 +415,6 @@ def mainProg():
         logTrack.write('error')
     logTrack.write('</networkInterfaces>')
 
-    logTrack.write('\n<sensors>')
-    try:
-        captureSensorState()
-        logTrack.write('captured')
-    except:
-        logTrack.write('error')
-    logTrack.write('</sensors>')
-
     logTrack.write('\n<battery>')
     try:
         captureBatteryState()
@@ -433,20 +426,19 @@ def mainProg():
     logTrack.write('\n\n</log>\n')
     logTrack.close()
 
-if __name__ == '__main__':
-    
-    # Check with the user on the number of executions and frequency of log collection.
-    numOfLogs = int(input('How many times would you like me to collect the logs: '))
-    freq = int(input('At what frequency should I collect the logs? Every (in seconds): '))
-    i = 1
+def initiator():
 
+    # Read or set runtime preferences
+    readPreferences()
+    
     # Save the current directory to navigate back to avoid infinitely nested data folders.
     currentDirectory = os.getcwd()
 
-    # New instance of 'You spin my head right round, right round.'
+    # Just a spinner to keep the user entertained and perplexed
     spinner = Spinner()
     
-    # Run the program at specified frequency and number of times. And a bit of nice console output.
+    i = 1
+    # Run the program at specified frequency and number of times. And a touch of some nice console output magic.
     while i <= numOfLogs:
         mainProg()
         os.chdir(currentDirectory)
@@ -461,3 +453,6 @@ if __name__ == '__main__':
         else:
             print('All logs have been captured and placed in \logs\%s\ directory.\n' % str(datetime.date.today()))
         i += 1
+
+if __name__ == '__main__':
+    initiator()
