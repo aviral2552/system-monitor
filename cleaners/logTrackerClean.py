@@ -24,6 +24,14 @@ def format_logId():
     date = a[13:23]
     uniqueLogId.append(machineID + str(date) + '[' + placeholder + str(log_count) + ']')
 
+def day():
+    s = df[1]
+    s2 = s[1:]
+    df[1] = pd.to_datetime(s2)
+    df['day'] = df[1].dt.dayofweek
+    df.iloc[0, 1] = "timeStamp"
+    df.iloc[0, 8] = "dayofweek"
+
 
 machineID = '327d87e2c8870aed161afea1ef803dc4'
 captureTime = ['timeStamp']
@@ -77,6 +85,8 @@ stuffToIgnore = ['<captureTime>', '</captureTime>',
 
 for stuff in stuffToIgnore:
     df = df.replace(stuff, "", regex = True)
+
+day()
               
 df.to_csv('logTracker.csv', index = False, header = False)
 

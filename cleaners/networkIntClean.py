@@ -1,13 +1,14 @@
+
 #############################################################
 # networkIntClean.py for systemMon.py
 # purpose: to parse with machineID gen from machineTagger
-# authors: ld, lh, calebpitts
+# authors: ld, lh
 # updated: 2018-11-19
-#
 #############################################################
 import pandas as pd
 import csv
 import re
+import datetime
 
 
 #function to define structure of logID
@@ -20,6 +21,14 @@ def format_logId_net():
         placeholder = '0'
     date = (timeStamp[13:23])
     uniqueLogId.append(machineID + str(date) + '[' + placeholder + str(log_count + 1) + ']')
+
+def day():
+    s = df[1]
+    s2 = s[1:]
+    df[1] = pd.to_datetime(s2)
+    df['day'] = df[1].dt.dayofweek
+    df.iloc[0, 1] = "timeStamp"
+    df.iloc[0, 23] = "dayofweek"
 
 machineID = '327d87e2c8870aed161afea1ef803dc4'
 captureTime = ['timeStamp']
@@ -68,14 +77,14 @@ with open('networkInterfaces.log') as f:
 
         if line.startswith('<captureTime>') == True:
             timeStamp = line
-        # increase timestampFix by 1 each with each <name> ->to resolve the timestamp value != index length in dF
-        ##the reason I am adding if else here is to prevent missing data issues which are pain in the ass and
-        ##a recurring issue with networkInterfaces
+
         if line.startswith('<name>') == True:
             name.append(line)
             captureTime.append(timeStamp)
             timestampFix += 1
             format_logId_net()
+
+
         elif line.startswith('<active>') == True:
             active.append(line)
 
@@ -152,16 +161,13 @@ with open('networkInterfaces.log') as f:
             if p2pIPv6 == 0:
                 IPv6_p2p.append('')
 
+
+
 df = pd.DataFrame(
     list(zip(uniqueLogId, captureTime, name, active, speed, duplex, mtu, incomingBytes, incomingPackets, incomingErrors,
-             incomingDrops, outgoingBytes, outgoingPackets, outgoingErrors, outgoingDrops, IPv4)))
-# IPv4_netmask,IPv4_broadcast,IPv4_p2p,IPv6,IPv6_netmask)))
-# ipv4_p2p added as a Series to get around the missing values issue - they are not properly sorted but it doesn't
-# truncate the list as it does when zipping it
-df["IPv4_p2p"] = pd.Series(IPv4_p2p)
-df["IPv4_broadcast"] = pd.Series(IPv4_broadcast)
-df["IPv4_netmask"] = pd.Series(IPv4_netmask)
-df["IPv6_netmask"] = pd.Series(IPv6_netmask)
+             incomingDrops, outgoingBytes, outgoingPackets, outgoingErrors, outgoingDrops, IPv4, IPv4_netmask, IPv4_broadcast,
+             IPv4_p2p, IPv6, IPv6_netmask, IPv6_broadcast, IPv6_p2p)))
+
 
 stuffToIgnore = ['<captureTime>', '</captureTime>', '<name>', '</name>', '<speed>', '</speed>',
                  '<active>', '</active>', '<duplex>', '</duplex>', '<mtu>', '</mtu>',
@@ -179,8 +185,8 @@ df = df.replace("\n", "", regex=True)
 for stuff in stuffToIgnore:
     df = df.replace(stuff, "", regex=True)
 
-df.to_csv('networkInterfaces.csv', index=False, header=False)
+day()
 
-print("\nTotal number of events recorded per log: %i " % log_count)
+df.to_csv('networkInterfaces.csv', index=False, header=False)
 
 print(df)
