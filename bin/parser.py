@@ -59,7 +59,6 @@ def setEnvironment():
 def crawl():
 
     global logSubDir
-    logFileList = []
     os.chdir(logDir)
 
     # Listing all sub-directories for logs
@@ -70,8 +69,9 @@ def crawl():
     for subDir in logSubDir:
         os.chdir(logDir)
         os.chdir(subDir)
+        logFileList = []
         logFileList = glob.glob('*.log', recursive = False)
-
+        
         # Placeholder print statements for executing the real scripts till they are ready
         for logFile in logFileList:
             if logFile == 'disks.log':
