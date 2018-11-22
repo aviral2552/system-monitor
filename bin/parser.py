@@ -29,11 +29,11 @@ def setEnvironment():
     logDir = os.getcwd()
 
     # Generating machine ID unconditionally
+    os.chdir(currentDir)
     machineTagger.generateMachineID()
     
     # Reading preferences file for machine ID
     userPreferences = []
-    os.chdir(currentDir)
     with open(prefFile) as preferences:
         for line in preferences:
             userPreferences.append((line.split('=')[1]).strip())
