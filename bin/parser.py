@@ -1,6 +1,9 @@
-import os
 import glob
+import os
+
 import machineTagger
+
+from cleaners import *
 
 logDir = ''
 currentDir = ''
@@ -71,14 +74,20 @@ def crawl():
         for logFile in logFileList:
             if logFile == 'disks.log':
                 print('Running disk cleaner for ' + subDir + '\\' + logFile + '\n')
+                
             if logFile == 'processes.log':
                 print('Running processes cleaner for ' + subDir + '\\' + logFile + '\n')
+
             if logFile == 'logTracker.log':
                 print('Running log tracker cleaner for ' + subDir + '\\' + logFile + '\n')
+
             if logFile == 'networkInterfaces.log':
                 print('Running network interfaces cleaner for ' + subDir + '\\' + logFile + '\n')
+
             if logFile == 'battery.log':
-                print('Running battery cleaner for ' + subDir + '\\' + logFile + '\n')
+                print('Running battery cleaners')
+                batteryClean.main(dataDir, machineID)
+
             if logFile == 'bootTime.log':
                 print('Running boot time cleaner for ' + subDir + '\\' + logFile + '\n')
 
