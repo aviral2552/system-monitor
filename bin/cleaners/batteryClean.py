@@ -72,7 +72,6 @@ def initiator(dataDir, machineID, logPath):
             i += 1
 
     # creates dataframe using list(zip('name of lists to be zipped into dataFrame'))
-    
     df = pd.DataFrame(list(zip(LogID, captureTime, supported, detected, charge, remaining, status, plugged)))
 
     # defining items for regex to remove from dataframe
@@ -90,5 +89,4 @@ def initiator(dataDir, machineID, logPath):
         df = df.replace(stuff, "", regex=True)
 
     os.chdir(dataDir)
-    with open('batteryLogs.csv', 'a') as batterLogs:
-        df.to_csv(batterLogs, index=False, header=False)
+    df.to_excel('batteryLogs.xls', index=False, header=False)
