@@ -27,6 +27,9 @@ def setEnvironment():
     global logDir
     os.chdir('../../logs/')
     logDir = os.getcwd()
+
+    # Generating machine ID unconditionally
+    machineTagger.generateMachineID()
     
     # Reading preferences file for machine ID
     userPreferences = []
@@ -34,14 +37,6 @@ def setEnvironment():
     with open(prefFile) as preferences:
         for line in preferences:
             userPreferences.append((line.split('=')[1]).strip())
-
-    # If machine ID is absent or is 0, generating the machine ID
-    if userPreferences[2] == '' or userPreferences[2] == '0':
-        machineTagger.generateMachineID()
-        userPreferences[:] = []
-        with open(prefFile) as preferences:
-            for line in preferences:
-                userPreferences.append((line.split('=')[1]).strip())
 
     # Capturing machine ID to pass to individual cleaner modules later
     global machineID
