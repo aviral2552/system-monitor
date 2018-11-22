@@ -72,24 +72,10 @@ def crawl():
         
         # Placeholder print statements for executing the real scripts till they are ready
         for logFile in logFileList:
-            if logFile == 'disks.log':
-                print('Running disk cleaner for ' + subDir + '\\' + logFile + '\n')
-                
-            if logFile == 'processes.log':
-                print('Running processes cleaner for ' + subDir + '\\' + logFile + '\n')
-
-            if logFile == 'logTracker.log':
-                print('Running log tracker cleaner for ' + subDir + '\\' + logFile + '\n')
-
-            if logFile == 'networkInterfaces.log':
-                print('Running network interfaces cleaner for ' + subDir + '\\' + logFile + '\n')
-
             if logFile == 'battery.log':
-                print('Running battery cleaners')
-                batteryClean.main(dataDir, machineID)
+                print('Running battery cleaner for date: ' + subDir)
+                batteryClean.initiator(dataDir, machineID, str(logDir + '/' + subDir))
 
-            if logFile == 'bootTime.log':
-                print('Running boot time cleaner for ' + subDir + '\\' + logFile + '\n')
 
 def main():
     setEnvironment()
