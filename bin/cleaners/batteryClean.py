@@ -10,6 +10,7 @@ import gc
 import os
 import re
 from datetime import datetime
+from openpyxl import load_workbook
 
 import pandas as pd
 
@@ -22,6 +23,34 @@ charge = []
 remaining = []
 status = []
 plugged = []
+
+def addHeaders():
+    global LogID, captureTime, supported
+    global detected, charge, remaining
+    global status, plugged
+
+    LogID.append('Log ID')
+    captureTime.append('Log time')
+    supported.append('Battery supported')
+    detected.append('Battery detected')
+    charge.append('Current charge')
+    remaining.append('Battery reamining for')
+    status.append('Charging status')
+    plugged.append('Plugged in')
+
+def emptyLists():
+    global LogID, captureTime, supported
+    global detected, charge, remaining
+    global status, plugged
+
+    LogID[:] = []
+    captureTime[:] = []
+    supported[:] = []
+    detected[:] = []
+    charge[:] = []
+    remaining[:] = []
+    status[:] = []
+    plugged[:] = []
 
 #function to define structure of logID
 def generateLogID(logCount, timeForLogID, machineID):
@@ -39,8 +68,13 @@ def initiator(dataDir, machineID, logPath):
     i = 10
     logCount = 0
     
-    os.chdir(logPath)
+    os.chdir(dataDir)
+    if os.path.exists('batteryLogs.xlsx') == False:
+        addHeaders()
+    else:
+        emptyLists()
 
+    os.chdir(logPath)
     with open('battery.log') as batteryLog:
         for line in batteryLog:
 
@@ -89,4 +123,15 @@ def initiator(dataDir, machineID, logPath):
         df = df.replace(stuff, "", regex=True)
 
     os.chdir(dataDir)
-    df.to_excel('batteryLogs.xls', index=False, header=False)
+
+    if os.path.exists('batteryLogs.xlsx') == True:
+        oldFile = load_workbook('batteryLogs.xlsx')
+        writer = pd.ExcelWriter('batteryLogs.xlsx', engine='openpyxl')
+        writer.book = oldFile
+        writer.sheets = {ws.title: ws for ws in oldFile.worksheets}
+        df.to_excel(writer,sheet_name='Battery logs', startrow=writer.sheets['Battery logs'].max_row, index = False,header= False)
+        writer.save()
+    else:
+        writer = pd.ExcelWriter('batteryLogs.xlsx')
+        df.to_excel(writer, sheet_name='Battery logs', index=False, header=False)
+        writer.save()
