@@ -1,93 +1,121 @@
-###############################################################################
-# Cleaner for: systemMon.py 0.3a 
-# Name: logTrackerClean.py
-#
-# Author: LuckyDucky (https://github.com/itsalways5am) & lamehacker
-# 
-# Updated: 20 November 2018 13:31
-###############################################################################
+###############################################################
+## logTrackerClean.py
+## last updated 24.11.2018
+## purpose : logTracker cleaner module for log parser module
+## authors: luckyducky + lamehacker
+################################################################
 
-#import libraries needed to run script
-import pandas as pd
 import csv
+import gc
+import os
 import re
+from datetime import datetime
+from openpyxl import load_workbook
 
+import pandas as pd
 
-def format_logId():
-    if log_count <= 9 and log_count >= 0:
+# for holding purposes manually entering machine ID from preferences (needs to be entered as a string)
+LogID = []
+captureTime = []
+bootTime = []
+processes = []
+disks= []
+networkInterfaces = []
+battery = []
+
+def addHeaders():
+    global LogID, captureTime, bootTime
+    global processes, disks
+    global networkInterfaces, battery
+
+    LogID.append('Log ID')
+    captureTime.append('Log time')
+    bootTime.append('bootTime Log')
+    processes.append('processes Log')
+    disks.append('disks Log')
+    networkInterfaces.append('networkInterfaces Log')
+    battery.append('battery Log')
+
+def emptyLists():
+    global LogID, captureTime, bootTime
+    global processes, disks
+    global networkInterfaces, battery
+
+    LogID[:] = []
+    captureTime[:] = []
+    bootTime[:] = []
+    processes[:] = []
+    disks[:] = []
+    networkInterfaces[:] = []
+    battery[:] = []
+
+#function to define structure of logID
+def generateLogID(logCount, timeForLogID, machineID):
+    if logCount <= 9 and logCount >= 0:
         placeholder = '000'
-    elif log_count <= 99 and log_count >= 10:
+    elif logCount <= 99 and logCount >= 10:
         placeholder = '00'
-    elif log_count > 99:
+    elif logCount > 99:
         placeholder = '0'
-    a = (captureTime[1])
-    date = a[13:23]
-    uniqueLogId.append(machineID + str(date) + '[' + placeholder + str(log_count) + ']')
-
-def day():
-    s = df[1]
-    s2 = s[1:]
-    df[1] = pd.to_datetime(s2)
-    df['day'] = df[1].dt.dayofweek
-    df.iloc[0, 1] = "timeStamp"
-    df.iloc[0, 8] = "dayofweek"
+    date = timeForLogID[13:23]
+    LogID.append(machineID + '_' + str(date) + '[' + placeholder + str(logCount) + ']')
 
 
-machineID = '327d87e2c8870aed161afea1ef803dc4'
-captureTime = ['timeStamp']
-bootTime = ['bootTime']
-processes= ['processes']
-disks = ['disks']
-networkInterfaces= ['networkInterfaces']
-sensors = ['sensors']
-battery= ['battery']
-uniqueLogId=['LogID']
+def initiator(dataDir, machineID, logPath):
+    i = 12
+    logCount = 0
 
-i = 12      #11 lines for each logTracker capture including log tags plus one n for empty line following
-log_count = 0
+    os.chdir(dataDir)
+    if os.path.exists('logTrackerLogs.xlsx') == False:
+        addHeaders()
+    else:
+        emptyLists()
 
-with open('logTracker.log') as f:
-    for line in f:
-  
-        if line.startswith('<log>') == True:
+    os.chdir(logPath)
+    with open('logTracker.log') as logTrackerLog:
+        for line in logTrackerLog:
+
+            if line.startswith('<log>') == True:
                 i = 1
                 continue
-        if line.startswith('</log>') == True:
-                log_count += 1
-                format_logId()
+            if line.startswith('</log>') == True:
+                logCount += 1
+                generateLogID(logCount, timeForLogID, machineID)
                 i = 11
                 continue
-        if i == 1:
+
+            if i == 1:
                 captureTime.append(line)
-        elif i == 3:
+            elif i == 3:
                 bootTime.append(line)
-        elif i == 4:
+            elif i == 4:
                 processes.append(line)
-        elif i == 5:
+            elif i == 5:
                 disks.append(line)
-        elif i == 6:
+            elif i == 6:
                 networkInterfaces.append(line)
-        elif i == 7:
-                sensors.append(line)
-        elif i == 8:
-                battery.append(line)        
-        i += 1
+            elif i == 7:
+                battery.append(line)
+            i += 1
+    # creates dataframe using list(zip('name of lists to be zipped into dataFrame'))
+    df = pd.DataFrame(list(zip(LogID, captureTime, supported, detected, charge, remaining, status, plugged)))
 
-f.close()
-#creating dataframe (with no typecast chances) using zip() bring together lists 
-df = pd.DataFrame(list(zip(uniqueLogId,captureTime, bootTime,processes,disks,networkInterfaces,sensors,battery)))
+    # creating list of strings for regex to strip prior to putting in dataFrame
+    stuffToIgnore = ['<captureTime>', '</captureTime>', '<bootTime>', '</bootTime>', '<processes>', '</processes>',
+                     '<disks>', '</disks>', '<networkInterfaces>', '</networkInterfaces>', '<battery>', '</battery>',
+                     '\n']
 
-#creating list of strings for regex to strip prior to putting in dataFrame
-stuffToIgnore = ['<captureTime>', '</captureTime>',
-                '<bootTime>','</bootTime>','<processes>',
-                '</processes>', '<disks>','<networkInterfaces>'
-                '<sensors>','</sensors>','<battery>','</battery>','\n']
+    os.chdir(dataDir)
 
-for stuff in stuffToIgnore:
-    df = df.replace(stuff, "", regex = True)
-
-day()
-              
-df.to_csv('logTracker.csv', index = False, header = False)
-
-print(df)
+    if os.path.exists('logTrackerLogs.xlsx') == True:
+        oldFile = load_workbook('logTrackerLogs.xlsx')
+        writer = pd.ExcelWriter('logTrackerLogs.xlsx', engine='openpyxl')
+        writer.book = oldFile
+        writer.sheets = {ws.title: ws for ws in oldFile.worksheets}
+        df.to_excel(writer, sheet_name='logTracker logs', startrow=writer.sheets['logTracker logs'].max_row, index=False,
+                    header=False)
+        writer.save()
+    else:
+        writer = pd.ExcelWriter('logTrackerLogs.xlsx')
+        df.to_excel(writer, sheet_name='logTracker logs', index=False, header=False)
+        writer.save()
