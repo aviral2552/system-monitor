@@ -1,90 +1,127 @@
 ###############################################################################
-# Cleaner for: systemMon.py
-# Name: bootClean.py
+# Cleaner update for: systemMon.py
+# bootClean.py to match format of batteryClean.py
 #
-# Author: LuckyDucky (https://github.com/itsalways5am), lamehacker
+# author: LuckyDucky (https://github.com/itsalways5am), lamehacker
 #
-# Updated: 2018-11-21 12:19
+# Updated: 2018-11-23
 ###############################################################################
 import csv
+import gc
+import os
 import re
+from datetime import datetime
+from openpyxl import load_workbook
+
 import pandas as pd
 
-#function to define structure of logID
-def format_logId():
-    if log_count <= 9 and log_count >= 0:
-        placeholder='000'
-    elif log_count <=99 and log_count >=10:
-        placeholder='00'
-    elif log_count > 99:
-        placeholder='0'
-    a=(captureTime[1])
-    date=a[13:23]    
-    uniqueLogId.append(machineID+'-'+str(date)+ '[' + placeholder +str(log_count) + ']')
+# for holding purposes manually entering machine ID from preferences (needs to be entered as a string)
+LogID = []
+captureTime = []
+osFamily = []
+osRelease = []
+osPlatform = []
+osDescription = []
+bootTime= []
 
-def day():
-    s = df[1]
-    s2 = s[1:]
-    df[1] = pd.to_datetime(s2)
-    df['day'] = df[1].dt.dayofweek
-    df.iloc[0, 1] = "timeStamp"
-    df.iloc[0, 7] = "dayofweek"
+def addHeaders():
+    global LogID, captureTime, supported
+    global detected, charge, remaining
+    global status, plugged
 
-machineID= '327d87e2c8870aed161afea1ef803dc4'
-captureTime = ['TimeStamp']
-osFamily = ['OSFamily']
-osRelease = ['OSRelease']
-osPlatform = ['OSPlatform']
-osDescription = ['OSDescription']
-bootTime = ['BootTime']
-uniqueLogId=['LogID']    
+    LogID.append('Log ID')
+    captureTime.append('Log time')
+    osFamily.append('OS Family')
+    osRelease.append('OS Release')
+    osPlatform.append('OS Platform')
+    osDescription.append('OS Description')
+    bootTime.append('Boot Time')
 
-i = 10
-log_count = 0
-with open('bootTime.log') as f:
-        
-        for line in f:
-            if line.startswith('<log>') == True:
-                i = 1
-                log_count += 1
-                continue
-            elif line.startswith('</log>') == True:
-                format_logId()
-                i = 7
-                continue
-                
-            if i == 1:
-                captureTime.append(line)
-            elif i == 2:
-                osFamily.append(line)
-            elif i == 3:
-                osRelease.append(line)
-            elif i == 4:
-                 osPlatform.append(line)
-            elif i == 5:
-                    osDescription.append(line)
-            elif i == 6:
-                    bootTime.append(line)
-            i += 1
+def emptyLists():
+    global LogID, captureTime, osFamily
+    global osRelease, osPlatform
+    global osDescription bootTime
 
-df = pd.DataFrame(list(zip(uniqueLogId, captureTime,bootTime, osFamily, osRelease, osPlatform, osDescription)))
+    LogID[:] = []
+    captureTime[:] = []
+    osFamily[:] = []
+    osPlatform[:] = []
+    osRelease[:] = []
+    osDescription[:] = []
+    bootTime[:] = []
 
+# function to define structure of logID
+def generateLogID(logCount, timeForLogID, machineID):
+    if logCount <= 9 and logCount >= 0:
+        placeholder = '000'
+    elif logCount <= 99 and logCount >= 10:
+        placeholder = '00'
+    elif logCount > 99:
+        placeholder = '0'
+    date = timeForLogID[13:23]
+    LogID.append(machineID + '_' + str(date) + '[' + placeholder + str(logCount)
 
-stuffToIgnore = ['<captureTime>', '</captureTime>',
-                 '<osFamily>', '</osFamily>',
-                 '<osRelease>', '</osRelease>',
-                 '<osPlatform>', '</osPlatform>',
-                 '<osDescription>', '</osDescription>',
-                 '<bootTime>', '</bootTime>',
-                 '\n']
+def initiator(dataDir, machineID, logPath):
+	i = 10
+	logCount = 0
 
-for stuff in stuffToIgnore:
-        df = df.replace(stuff, "", regex=True)
+	os.chdir(dataDir)
+	if os.path.exists('bootTimeLogs.xlsx') == False:
+		addHeaders()
+	else:
+		emptyLists()
 
-day()
+	os.chdir(logPath)
+	with open('bootTime.log') as bootTimeLog:
+		for line in bootTimeLog:
 
-df.to_csv('bootTime.csv', index=False, header=False)
+		if line.startswith('<log>') == True:
+			i = 1
+			continue
+		if line.startswith('</log>') == True:
+			logCount += 1
+			generateLogID(logCount, timeForLogID, machineID)
+			i = 7
+			continue
 
-print(df)
+		if i == 1:
+			captureTime.append(line)
+			timeForLogID = line
 
+		elif i == 2:
+			osFamily.append(line)
+		elif i == 3:
+			osRelease.append(line)
+		elif i == 4:
+			osPlatform.append(line)
+		elif i == 5:
+			osDescription.append(line)
+		elif i == 6:
+			bootTime.append(line)
+
+		i += 1
+
+	df = pd.DataFrame(list(zip(LogId, captureTime, osDescription, osFamily, osRelease, osPlatform, bootTime)))
+
+	stuffToIgnore = ['<captureTime>', '</captureTime>', '<osFamily>', '</osFamily>', '<osRelease>', '</osRelease>',
+					 '<osPlatform>', '</osPlatform>', '<osDescription>', '</osDescription>', '<bootTime>',
+					 '</bootTime>', '\n']
+
+	for stuff in stuffToIgnore:
+		df = df.replace(stuff, "", regex=True)
+
+	os.chdir(dataDir)
+
+	if os.path.exists('bootTimeLogs.xlsx') == True:
+		oldFile = load_workbook('bootTimeLogs.xlsx')
+		writer = pd.ExcelWriter('bootTimeLogs.xlsx', engine='openpyxl')
+		writer.book = oldFile
+		writer.sheets = {ws.title: ws for ws in oldFile.worksheets}
+		df.to_excel(writer, sheet_name='BootTime logs', startrow=writer.sheets['BooTime logs'].max_row, index=False,
+					header=False)
+		writer.save()
+	else:
+		writer = pd.ExcelWriter('bootTimeLogs.xlsx')
+		df.to_excel(writer, sheet_name='BootTime logs', index=False, header=False)
+		writer.save()
 
