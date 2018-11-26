@@ -1,8 +1,8 @@
 ###############################################################
-## logTrackerClean.py
-## last updated 24.11.2018
-## purpose : logTracker cleaner module for log parser module
-## authors: luckyducky + lamehacker
+# logTrackerClean.py
+# last updated 24.11.2018
+# purpose : logTracker cleaner module for log parser module
+## authors: luckyducky + lamehacker + calebpitts
 ################################################################
 
 import csv
@@ -19,9 +19,10 @@ LogID = []
 captureTime = []
 bootTime = []
 processes = []
-disks= []
+disks = []
 networkInterfaces = []
 battery = []
+
 
 def addHeaders():
     global LogID, captureTime, bootTime
@@ -36,6 +37,7 @@ def addHeaders():
     networkInterfaces.append('networkInterfaces Log')
     battery.append('battery Log')
 
+
 def emptyLists():
     global LogID, captureTime, bootTime
     global processes, disks
@@ -49,7 +51,9 @@ def emptyLists():
     networkInterfaces[:] = []
     battery[:] = []
 
-#function to define structure of logID
+# function to define structure of logID
+
+
 def generateLogID(logCount, timeForLogID, machineID):
     if logCount <= 9 and logCount >= 0:
         placeholder = '000'
@@ -86,6 +90,7 @@ def initiator(dataDir, machineID, logPath):
 
             if i == 1:
                 captureTime.append(line)
+                timeForLogID = line
             elif i == 3:
                 bootTime.append(line)
             elif i == 4:
@@ -98,12 +103,17 @@ def initiator(dataDir, machineID, logPath):
                 battery.append(line)
             i += 1
     # creates dataframe using list(zip('name of lists to be zipped into dataFrame'))
-    df = pd.DataFrame(list(zip(LogID, captureTime, supported, detected, charge, remaining, status, plugged)))
+    df = pd.DataFrame(list(zip(LogID, captureTime, bootTime, processes, disks, networkInterfaces, battery)))
 
     # creating list of strings for regex to strip prior to putting in dataFrame
     stuffToIgnore = ['<captureTime>', '</captureTime>', '<bootTime>', '</bootTime>', '<processes>', '</processes>',
                      '<disks>', '</disks>', '<networkInterfaces>', '</networkInterfaces>', '<battery>', '</battery>',
                      '\n']
+
+    # needed to add a separate line for \n removal cause it wasn't working in the stuffToIgnore
+    df = df.replace("\n", "", regex=True)
+    for stuff in stuffToIgnore:
+        df = df.replace(stuff, "", regex=True)
 
     os.chdir(dataDir)
 

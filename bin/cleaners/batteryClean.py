@@ -2,7 +2,7 @@
 ## batteryclean.py
 ## last updated 23.11.2018 
 ## purpose : battery cleaner module for log parser module
-## authors: luckyducky + lamehacker
+## authors: luckyducky + lamehacker + calebpitts
 ################################################################
 
 import csv
