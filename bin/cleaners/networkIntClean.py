@@ -43,8 +43,8 @@ def addHeaders():
     global speed, duplex, mtu, incomingBytes
     global incomingPackets, incomingErrors, incomingDrops
     global outgoingBytes, outgoingPackets, outgoingErrors
-    global outgoingDrops, IPv4, IPv6, IPv4_netmask, IPv4_netmask
-    global IPv4_broadcast, IPv6, IPv4_netmask, IPv4_broadcast
+    global outgoingDrops, IPv4, IPv6, IPv4_netmask
+    global IPv4_broadcast, IPv4_broadcast
     global IPv4_p2p, IPv6_netmask, IPv6_p2p
 
     LogID.append('Log ID')
@@ -76,9 +76,9 @@ def emptyLists():
     global speed, duplex, mtu, incomingBytes
     global incomingPackets, incomingErrors, incomingDrops
     global outgoingBytes, outgoingPackets, outgoingErrors
-    global outgoingDrops, IPv4, IPv6, IPv4_netmask, IPv4_netmask
-    global IPv4_broadcast, IPv6, IPv4_netmask, IPv4_broadcast
-    global IPv4_p2p, IPv6_netmask, IPv6_p2p
+    global outgoingDrops, IPv4, IPv4_netmask, IPv4_broadcast
+    global IPv6, IPv6_netmask, IPv6_broadcast
+    global IPv4_p2p, IPv6_p2p
 
     LogID[:] = []
     captureTime[:] = []
@@ -222,9 +222,9 @@ def initiator(dataDir, machineID, logPath):
                 broadcastIPv6 = 1
                 IPv6_broadcast.append(line)
 
-            elif line.startswith('<IPv4_p2p>') == True:
+            elif line.startswith('<IPv6_p2p>') == True:
                 p2pIPv6 = 1
-                IPv4_p2p.append(line)
+                IPv6_p2p.append(line)
 
             if line.startswith('</log>') == True:
                 if ipv4 == 0:
