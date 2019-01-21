@@ -2,21 +2,24 @@
 # Simple cross-platform python script to monitor and capture CPU, memory, network, sensor and battery information 
 # Part of Project Aradia
 #
-# Last update: 2 January 2019
-# Version: 0.5a
+# Last update: 22 January 2019
+# Version: 0.5b
 #
 ###
 
-import os
-import sys
-import platform
-import psutil
-import time
 import datetime
+import json
+import os
+import platform
 import socket
+import sys
 import threading
+import time
 
-#import db_writer
+import psutil
+import requests
+
+import db_writer
 
 logs_to_collect = 0
 log_frequency = 0
@@ -79,7 +82,7 @@ class set_run_env:
     @staticmethod
     def read_preferences():
 
-        global logs_to_collect, log_frequency, user_preferences
+        global logs_to_collect, log_frequency, user_preferences, machine_Id
         preferences = []
 
         with open(user_preferences) as f:
@@ -87,6 +90,7 @@ class set_run_env:
                 preferences.append((line.split('=')[1]).strip())
             preferences[0] = int(preferences[0])
             preferences[1] = int(preferences[1])
+        machine_Id = str(preferences[2])
 
         print('Current runtime config\n======================\n\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(preferences[0], preferences[1]))
         
@@ -137,13 +141,13 @@ class flow_controller:
 class log_collector:
 
     def __init__(self):
-        self.boot_data = []
+        self.system_data = []
         self.disk_data = []
         self.battery_data = []
         self.process_data = []
         self.network_data = []
 
-    def boot_and_os_info(self):
+    def system_info(self):
 
         try:
             os_map = {
@@ -166,14 +170,22 @@ class log_collector:
             if value == True:
                 set_os = str(key)
         
-        self.boot_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
-        self.boot_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
-        self.boot_data.append(set_os)
-        self.boot_data.append(str(platform.release()))
-        self.boot_data.append(str(platform.platform()))
-        self.boot_data.append(str(platform.version()))
-        self.boot_data.append(datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d'))
-        self.boot_data.append(datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%H:%M:%S'))
+        self.system_data.append(machine_Id + '[' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']')
+        self.system_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
+        self.system_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
+        self.system_data.append(set_os)
+        self.system_data.append(str(platform.release()))
+        self.system_data.append(str(platform.platform()))
+        self.system_data.append(str(platform.version()))
+        self.system_data.append(datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d'))
+        self.system_data.append(datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%H:%M:%S'))
+
+        geo_ip_data = requests.get('https://get.geojs.io/v1/ip/geo.json').json()
+        
+        for value in geo_ip_data.values():
+            self.system_data.append(value)
+
+        # Tip: Access geo_ip_data to see the entire dict for constructing column names in the database
 
     def disk_state(self):
 
@@ -275,95 +287,87 @@ class log_collector:
                 if addr.address is not None:
                     keep_count += 1
 
-        if keep_count == 3:
-            self.network_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
-            self.network_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
-            self.network_data.append(str(nic))
-            if nic in stats:
-                st = stats[nic]
-            if st.isup is not None:
-                self.network_data.append('yes')
-            else:
-                self.network_data.append('no')
-            self.network_data.append(str(st.speed))
-            self.network_data.append(str(duplexMap[st.duplex]))
-            self.network_data.append(str(st.mtu))
+            if keep_count == 3:
+                self.network_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
+                self.network_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
+                self.network_data.append(str(nic))
+                if nic in stats:
+                    st = stats[nic]
+                if st.isup is not None:
+                    self.network_data.append('yes')
+                else:
+                    self.network_data.append('no')
+                self.network_data.append(str(st.speed))
+                self.network_data.append(str(duplexMap[st.duplex]))
+                self.network_data.append(str(st.mtu))
 
-            if nic in io_counters:
-                io = io_counters[nic]
+                if nic in io_counters:
+                    io = io_counters[nic]
 
-                self.network_data.append(str(io.bytes_recv))
-                self.network_data.append(str(io.packets_recv))
-                self.network_data.append(str(io.errin))
-                self.network_data.append(str(io.dropin))
+                    self.network_data.append(str(io.bytes_recv))
+                    self.network_data.append(str(io.packets_recv))
+                    self.network_data.append(str(io.errin))
+                    self.network_data.append(str(io.dropin))
 
-                self.network_data.append(str(io.bytes_recv))
-                self.network_data.append(str(io.packets_sent))
-                self.network_data.append(str(io.errout))
-                self.network_data.append(str(io.dropout))
-            
-            address_bugfix = 0
-            for addr in addrs:
-                current_addr = str(afMap.get(addr.family, addr.family))
-
-                # For IPv4 addresses
-                if current_addr.startswith('IPv4', 0, 3) and address_bugfix == 0:
-                    self.network_data.append(str(addr.address))
-                    address_bugfix += 1
-            
-                # For MAC addresses
-                elif current_addr.startswith('MAC', 0, 2) and address_bugfix == 1:
-                    self.network_data.append(str(addr.address))
-                    address_bugfix += 1
+                    self.network_data.append(str(io.bytes_recv))
+                    self.network_data.append(str(io.packets_sent))
+                    self.network_data.append(str(io.errout))
+                    self.network_data.append(str(io.dropout))
                 
-                # For IPv6 addresses
-                elif current_addr.startswith('IPv6', 0, 3) and address_bugfix == 2:
-                    self.network_data.append(str(addr.address))
-                    address_bugfix += 1
+                address_bugfix = 0
+                for addr in addrs:
+                    current_addr = str(afMap.get(addr.family, addr.family))
 
-                # Filling blank values for missing addresses (IPv4/MAC/IPv6)
-                if address_bugfix != 3:
-                    while address_bugfix < 3:
-                        self.network_data.append('')
+                    # For IPv4 addresses
+                    if current_addr.startswith('IPv4', 0, 3) and address_bugfix == 0:
+                        self.network_data.append(str(addr.address))
                         address_bugfix += 1
                 
-                if addr.broadcast:
-                    self.network_data.append(str(addr.broadcast))
-                else:
-                    self.network_data.append('')
+                    # For MAC addresses
+                    elif current_addr.startswith('MAC', 0, 2) and address_bugfix == 1:
+                        self.network_data.append(str(addr.address))
+                        address_bugfix += 1
+                    
+                    # For IPv6 addresses
+                    elif current_addr.startswith('IPv6', 0, 3) and address_bugfix == 2:
+                        self.network_data.append(str(addr.address))
+                        address_bugfix += 1
 
-                if addr.netmask:
-                    self.network_data.append(str(addr.netmask))
-                else:
-                    self.network_data.append('')
+                    # Filling blank values for missing addresses (IPv4/MAC/IPv6)
+                    if address_bugfix != 3:
+                        while address_bugfix < 3:
+                            self.network_data.append('')
+                            address_bugfix += 1
+                    
+                    if addr.broadcast:
+                        self.network_data.append(str(addr.broadcast))
+                    else:
+                        self.network_data.append('')
 
-                if addr.ptp:
-                    self.network_data.append(str(addr.ptp))
-                else:
-                    self.network_data.append('')
+                    if addr.netmask:
+                        self.network_data.append(str(addr.netmask))
+                    else:
+                        self.network_data.append('')
+
+                    if addr.ptp:
+                        self.network_data.append(str(addr.ptp))
+                    else:
+                        self.network_data.append('')
 
     def collect_all_data(self):
-        self.boot_and_os_info()
+        self.system_info()
         self.disk_state()
         self.battery_state()
         self.process_state()
         self.network_state()
 
     def send_to_db_writer(self):
-        # Call the respective functions in db_writer.py with the data from here
-
-        print('\nBoot data\n')
-        print(self.boot_data)
-
-        print('\nDisk data\n')
-        print(self.disk_data)
-
-        print('\nBattery data')
-        print(self.battery_data)
-
-        #print('\nProcess data')
+        db_writer.start_program(self.system_data, self.disk_data, self.battery_data, self.network_data, self.process_data)
+        #print(self.system_data)
+        #print(self.disk_data)
+        #print(self.battery_data)
+        #print(self.network_data)
         #print(self.process_data)
-
 
 def start_program():
     set_run_env.read_preferences()
