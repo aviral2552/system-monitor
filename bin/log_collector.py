@@ -180,10 +180,15 @@ class log_collector:
         self.system_data.append(datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d'))
         self.system_data.append(datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%H:%M:%S'))
 
-        geo_ip_data = requests.get('https://get.geojs.io/v1/ip/geo.json').json()
+        try:
+            geo_ip_data = requests.get('https://get.geojs.io/v1/ip/geo.json').json()
         
-        for value in geo_ip_data.values():
-            self.system_data.append(value)
+            for value in geo_ip_data.values():
+                self.system_data.append(value)
+            
+        except:
+            for i in range(15):
+                self.system_data.append('')
 
         # Tip: Access geo_ip_data to see the entire dict for constructing column names in the database
 
