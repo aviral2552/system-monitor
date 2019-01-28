@@ -2,8 +2,8 @@
 # Simple cross-platform python script to monitor and capture CPU, memory, network, sensor and battery information 
 # Part of Project Aradia
 #
-# Last update: 22 January 2019
-# Version: 0.5b
+# Last update: 29 January 2019
+# Version: 0.5c
 #
 ###
 
@@ -15,6 +15,7 @@ import socket
 import sys
 import threading
 import time
+import numpy as np
 
 import psutil
 import requests
@@ -147,6 +148,10 @@ class log_collector:
         self.process_data = []
         self.network_data = []
 
+        self.disk_data_array = []
+        self.network_data_array = []
+        self.process_data_array = []
+
     def system_info(self):
 
         try:
@@ -187,7 +192,7 @@ class log_collector:
                 self.system_data.append(value)
             
         except:
-            for i in range(15):
+            for _ in range(15):
                 self.system_data.append('')
 
         # Tip: Access geo_ip_data to see the entire dict for constructing column names in the database
@@ -201,15 +206,18 @@ class log_collector:
                     continue
             usage = psutil.disk_usage(part.mountpoint)
         
-        self.disk_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
-        self.disk_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
-        self.disk_data.append(str(part.device))
-        self.disk_data.append(str(usage.total))
-        self.disk_data.append(str(usage.used))
-        self.disk_data.append(str(usage.free))
-        self.disk_data.append(str(int(usage.percent)))
-        self.disk_data.append(str(part.fstype))
-        self.disk_data.append(str(part.mountpoint))
+            self.disk_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
+            self.disk_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
+            self.disk_data.append(str(part.device))
+            self.disk_data.append(str(usage.total))
+            self.disk_data.append(str(usage.used))
+            self.disk_data.append(str(usage.free))
+            self.disk_data.append(str(int(usage.percent)))
+            self.disk_data.append(str(part.fstype))
+            self.disk_data.append(str(part.mountpoint))
+
+        self.disk_data_array = np.asarray(self.disk_data)
+        self.disk_data_array = self.disk_data_array.reshape(int(len(self.disk_data) / 9), 9)
 
     def battery_state(self):
 
@@ -244,27 +252,67 @@ class log_collector:
             self.battery_data.append('no')
 
     def process_state(self):
-        
+
         for proc in psutil.process_iter():
             try:
                 self.process_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
                 self.process_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
 
-                self.process_data.append(str(proc.pid))
-                self.process_data.append(str(proc.ppid()))
-                self.process_data.append(str(proc.name()))
+                try:
+                    self.process_data.append(str(proc.pid))
+                except:
+                    self.process_data.append('')
 
-                self.process_data.append(str(proc.cpu_percent()/psutil.cpu_count()))
-                self.process_data.append(str(proc.memory_percent(memtype='rss')))
+                try:
+                    self.process_data.append(str(proc.ppid()))
+                except:
+                    self.process_data.append('')
+                
+                try:
+                    self.process_data.append(str(proc.name()))
+                except:
+                    self.process_data.append('')
+                
+                try:
+                    self.process_data.append(str(proc.cpu_percent()/psutil.cpu_count()))
+                except:
+                    self.process_data.append('')
 
-                self.process_data.append(str(proc.memory_info().rss))
-                self.process_data.append(str(proc.memory_info().vms))
+                try:
+                    self.process_data.append(str(proc.memory_percent(memtype='rss')))
+                except:
+                    self.process_data.append('')
 
-                self.process_data.append(str(proc.exe()))
-                self.process_data.append(str(proc.username()))
-                self.process_data.append(str(proc.nice()))
+                try:
+                    self.process_data.append(str(proc.memory_info().rss))
+                except:
+                    self.process_data.append('')
+
+                try:    
+                    self.process_data.append(str(proc.memory_info().vms))
+                except:
+                    self.process_data.append('')
+
+                try:
+                    self.process_data.append(str(proc.exe()))
+                except:
+                    self.process_data.append('')
+
+                try:    
+                    self.process_data.append(str(proc.username()))
+                except:
+                    self.process_data.append('')
+                
+                try:
+                    self.process_data.append(str(proc.nice()))
+                except:
+                    self.process_data.append('')
+
             except psutil.AccessDenied:
                 pass
+
+        self.process_data_array = np.asarray(self.process_data)
+        self.process_data_array = self.process_data_array.reshape(int(len(self.process_data)/12), 12)
 
     def network_state(self):
 
@@ -358,6 +406,10 @@ class log_collector:
                         self.network_data.append(str(addr.ptp))
                     else:
                         self.network_data.append('')
+                
+        self.network_data_array = np.asarray(self.network_data)
+        num_of_adapters = int(len(self.network_data) / 27)
+        self.network_data_array = self.network_data_array.reshape(num_of_adapters, 27)
 
     def collect_all_data(self):
         self.system_info()
@@ -367,12 +419,12 @@ class log_collector:
         self.network_state()
 
     def send_to_db_writer(self):
-        db_writer.start_program(self.system_data, self.disk_data, self.battery_data, self.network_data, self.process_data)
+        db_writer.start_program(self.system_data, self.disk_data_array, self.battery_data, self.network_data_array, self.process_data)
         #print(self.system_data)
-        #print(self.disk_data)
+        #print(self.disk_data_array)
         #print(self.battery_data)
-        #print(self.network_data)
-        #print(self.process_data)
+        #print(self.network_data_array)
+        #print(self.process_data_array)
 
 def start_program():
     set_run_env.read_preferences()
