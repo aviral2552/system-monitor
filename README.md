@@ -10,6 +10,7 @@ This project is currently under initial phases of active development.
 You must have `xcode`, `brew` and `git` installed. 
 
 1. To install Xcode, open terminal and type
+
 `$ xcode-select --install`
 
 2. To install Homebrew, open terminal and type
