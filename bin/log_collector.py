@@ -95,7 +95,7 @@ class set_run_env:
 
         print('Current runtime config\n======================\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(preferences[0], preferences[1]))
         
-        print('\nWould you like to start logging with the default configuration? (Y/n): ')
+        print('\nWould you like to start logging with current configuration? (Y/n): ')
 
         if set_run_env.yes_no(input().strip()):
             logs_to_collect = preferences[0]
