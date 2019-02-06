@@ -2,7 +2,7 @@
 # Simple cross-platform python script to monitor and capture CPU, memory, network, sensor and battery information 
 # Part of Project Aradia
 #
-# Last update: 29 January 2019
+# Last update: 06 February 2019
 # Version: 0.5c
 #
 ###
@@ -27,7 +27,7 @@ log_frequency = 0
 machine_Id = ''
 user_preferences = 'preferences.conf'
 
-# For console output formatting, asthetics and reading/writing user preferences
+# For console output formatting, asthetics and reading/writing user preferences file
 class set_run_env:
 
     busy = False
@@ -206,6 +206,7 @@ class log_collector:
                     continue
             usage = psutil.disk_usage(part.mountpoint)
         
+            self.disk_data.append(machine_Id + '[' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']')
             self.disk_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
             self.disk_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
             self.disk_data.append(str(part.device))
@@ -217,10 +218,11 @@ class log_collector:
             self.disk_data.append(str(part.mountpoint))
 
         self.disk_data_array = np.asarray(self.disk_data)
-        self.disk_data_array = self.disk_data_array.reshape(int(len(self.disk_data) / 9), 9)
+        self.disk_data_array = self.disk_data_array.reshape(int(len(self.disk_data) / 10), 10)
 
     def battery_state(self):
 
+        self.battery_data.append(machine_Id + '[' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']')
         self.battery_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
         self.battery_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
 
@@ -239,7 +241,7 @@ class log_collector:
         self.battery_data.append(str(round(batt.percent, 2)))
 
         if batt.power_plugged:
-            # Unlimited juice.... as per psutil apparently
+            # Unlimited juice.... as per psutil, apparently
             self.battery_data.append('unlimited')
             if batt.percent < 100:
                 self.battery_data.append('charging')
@@ -247,7 +249,10 @@ class log_collector:
                 self.battery_data.append('charged')
             self.battery_data.append('yes')
         else:
-            self.battery_data.append(str(batt.secsleft))
+            if str(batt.secsleft) == 'BatteryTime.POWER_TIME_UNKNOWN':
+                self.battery_data.append('Calculating remaining time')
+            else:
+                self.battery_data.append(str(batt.secsleft))
             self.battery_data.append('discharging')
             self.battery_data.append('no')
 
@@ -255,6 +260,7 @@ class log_collector:
 
         for proc in psutil.process_iter():
             try:
+                self.process_data.append(machine_Id + '[' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']')
                 self.process_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
                 self.process_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
 
@@ -312,7 +318,7 @@ class log_collector:
                 pass
 
         self.process_data_array = np.asarray(self.process_data)
-        self.process_data_array = self.process_data_array.reshape(int(len(self.process_data)/12), 12)
+        self.process_data_array = self.process_data_array.reshape(int(len(self.process_data)/13), 13)
 
     def network_state(self):
 
@@ -341,6 +347,7 @@ class log_collector:
                     keep_count += 1
 
             if keep_count == 3:
+                self.network_data.append(machine_Id + '[' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']')
                 self.network_data.append(datetime.datetime.now().strftime('%Y-%m-%d'))
                 self.network_data.append(datetime.datetime.now().strftime('%H:%M:%S'))
                 self.network_data.append(str(nic))
@@ -362,54 +369,44 @@ class log_collector:
                     self.network_data.append(str(io.errin))
                     self.network_data.append(str(io.dropin))
 
-                    self.network_data.append(str(io.bytes_recv))
+                    self.network_data.append(str(io.bytes_sent))
                     self.network_data.append(str(io.packets_sent))
                     self.network_data.append(str(io.errout))
                     self.network_data.append(str(io.dropout))
                 
-                address_bugfix = 0
+                address_bugfix = 1
                 for addr in addrs:
                     current_addr = str(afMap.get(addr.family, addr.family))
 
                     # For IPv4 addresses
-                    if current_addr.startswith('IPv4', 0, 3) and address_bugfix == 0:
+                    if current_addr == 'IPv4':
                         self.network_data.append(str(addr.address))
-                        address_bugfix += 1
-                
-                    # For MAC addresses
-                    elif current_addr.startswith('MAC', 0, 2) and address_bugfix == 1:
-                        self.network_data.append(str(addr.address))
-                        address_bugfix += 1
-                    
-                    # For IPv6 addresses
-                    elif current_addr.startswith('IPv6', 0, 3) and address_bugfix == 2:
-                        self.network_data.append(str(addr.address))
-                        address_bugfix += 1
-
-                    # Filling blank values for missing addresses (IPv4/MAC/IPv6)
-                    if address_bugfix != 3:
-                        while address_bugfix < 3:
+                        if addr.netmask:
+                            self.network_data.append(str(addr.netmask))
+                        else:
                             self.network_data.append('')
-                            address_bugfix += 1
-                    
-                    if addr.broadcast:
-                        self.network_data.append(str(addr.broadcast))
-                    else:
-                        self.network_data.append('')
+                        address_bugfix += 1
+                        continue
+                        
+                    if current_addr == 'MAC':
+                        self.network_data.append(str(addr.address))
+                        address_bugfix += 1
+                        continue
+                    elif current_addr == 'IPv6' and address_bugfix == 2:
+                        self.network_data.append('No MAC address')
+                        address_bugfix += 1
+                        continue
 
-                    if addr.netmask:
-                        self.network_data.append(str(addr.netmask))
-                    else:
-                        self.network_data.append('')
-
-                    if addr.ptp:
-                        self.network_data.append(str(addr.ptp))
-                    else:
-                        self.network_data.append('')
-                
+                    if current_addr == 'IPv6':
+                        self.network_data.append(str(addr.address))
+                        if addr.netmask:
+                            self.network_data.append(str(addr.netmask))
+                        else:
+                            self.network_data.append('')
+                        address_bugfix = 1
+                        
         self.network_data_array = np.asarray(self.network_data)
-        num_of_adapters = int(len(self.network_data) / 27)
-        self.network_data_array = self.network_data_array.reshape(num_of_adapters, 27)
+        self.network_data_array = self.network_data_array.reshape(int(len(self.network_data) / 21), 21)
 
     def collect_all_data(self):
         self.system_info()
@@ -419,7 +416,7 @@ class log_collector:
         self.network_state()
 
     def send_to_db_writer(self):
-        db_writer.start_program(self.system_data, self.disk_data_array, self.battery_data, self.network_data_array, self.process_data)
+        db_writer.start_program(self.system_data, self.disk_data_array, self.battery_data, self.network_data_array, self.process_data_array)
         #print(self.system_data)
         #print(self.disk_data_array)
         #print(self.battery_data)
