@@ -48,8 +48,7 @@ class data_writer():
 
         try:
             self.log_db.write_values('insert into system_info values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [self.system_data])
-
-            print('System information data has been written to the database.')
+            #print('System information data has been written to the database.')
         
         except:
             print('An error has occured while writing to system information database.')
@@ -65,7 +64,7 @@ class data_writer():
         
         try:
             self.log_db.write_values('insert into disks values (?,?,?,?,?,?,?,?,?,?)', self.disk_data)
-            print('Disk information data has been written to the database.')
+            #print('Disk information data has been written to the database.')
         
         except:
             print('An error has occured while writing to disk information database.')
@@ -80,7 +79,7 @@ class data_writer():
         
         try:
             self.log_db.write_values('insert into battery values (?,?,?,?,?,?,?,?,?)', [self.battery_data])
-            print('Battery information data has been written to the database.')
+            #print('Battery information data has been written to the database.')
         
         except:
             print('An error has occured while writing to battery information database.')
@@ -97,7 +96,7 @@ class data_writer():
         
         try:
             self.log_db.write_values('insert into network values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', self.network_data)
-            print('Network information data has been written to the database.')
+            #print('Network information data has been written to the database.')
         
         except:
             print('An error has occured while writing to network information database.')
@@ -113,7 +112,7 @@ class data_writer():
         
         try:
             self.log_db.write_values('insert into process values (?,?,?,?,?,?,?,?,?,?,?,?,?)', self.process_data)
-            print('Process information data has been written to the database.')
+            #print('Process information data has been written to the database.')
         
         except:
             print('An error has occured while writing to process information database.')
