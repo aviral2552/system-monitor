@@ -124,6 +124,7 @@ class flow_controller:
         while i <= logs_to_collect:
             data_store = log_collector()
             data_store.collect_all_data()
+            data_store.send_to_db_writer()
             run_env.clear_screen()
             print('Statistics\n==========\n\nTotal logs to collect: %i\nWait interval (in seconds): %i' % (self.logs_to_collect, self.log_frequency))
             print('\nLogs collected: %i\nLogs remaining: %i\n' % (i, self.logs_to_collect - i))
@@ -135,7 +136,7 @@ class flow_controller:
             else:
                 run_env.clear_screen()
                 print('All logs have been captured.\n')
-                data_store.send_to_db_writer()
+                #data_store.send_to_db_writer()
 
             i += 1        
         
