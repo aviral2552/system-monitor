@@ -93,9 +93,9 @@ class set_run_env:
             preferences[1] = int(preferences[1])
         machine_Id = str(preferences[2])
 
-        print('Current runtime config\n======================\n\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(preferences[0], preferences[1]))
+        print('Current runtime config\n======================\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(preferences[0], preferences[1]))
         
-        print('\nWould you like to start logging with the default configuration? (Y/n): ')
+        print('\nWould you like to start logging with current configuration? (Y/n): ')
 
         if set_run_env.yes_no(input().strip()):
             logs_to_collect = preferences[0]
@@ -107,7 +107,7 @@ class set_run_env:
             f = open(user_preferences, 'w')
             f.write('logs_to_collect=' + str(logs_to_collect) + '\nlog_frequency=' + str(log_frequency) + '\nmachine_Id=' + str(preferences[2]))
             f.close()
-            time.sleep(3)
+            time.sleep(2)
 
 class flow_controller:
 
@@ -124,6 +124,7 @@ class flow_controller:
         while i <= logs_to_collect:
             data_store = log_collector()
             data_store.collect_all_data()
+            data_store.send_to_db_writer()
             run_env.clear_screen()
             print('Statistics\n==========\n\nTotal logs to collect: %i\nWait interval (in seconds): %i' % (self.logs_to_collect, self.log_frequency))
             print('\nLogs collected: %i\nLogs remaining: %i\n' % (i, self.logs_to_collect - i))
@@ -135,7 +136,7 @@ class flow_controller:
             else:
                 run_env.clear_screen()
                 print('All logs have been captured.\n')
-                data_store.send_to_db_writer()
+                #data_store.send_to_db_writer()
 
             i += 1        
         
