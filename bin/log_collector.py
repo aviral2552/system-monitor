@@ -93,7 +93,7 @@ class set_run_env:
             preferences[1] = int(preferences[1])
         machine_Id = str(preferences[2])
 
-        print('Current runtime config\n======================\n\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(preferences[0], preferences[1]))
+        print('Current runtime config\n======================\nLogs to collect: %i\nCollection frequency (in seconds): %i' %(preferences[0], preferences[1]))
         
         print('\nWould you like to start logging with the default configuration? (Y/n): ')
 
@@ -107,7 +107,7 @@ class set_run_env:
             f = open(user_preferences, 'w')
             f.write('logs_to_collect=' + str(logs_to_collect) + '\nlog_frequency=' + str(log_frequency) + '\nmachine_Id=' + str(preferences[2]))
             f.close()
-            time.sleep(3)
+            time.sleep(2)
 
 class flow_controller:
 
