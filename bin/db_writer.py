@@ -44,14 +44,14 @@ class data_writer():
                 'short_country_name text, area_code text, public_ip text, city text, country text,'
                 'continent_code text, country_code text, latitude text)')
         except:
-            print('An error has occured while creating system information database.')
+            print('An error has occurred while creating system information database.')
 
         try:
             self.log_db.write_values('insert into system_info values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [self.system_data])
             #print('System information data has been written to the database.')
         
         except:
-            print('An error has occured while writing to system information database.')
+            print('An error has occurred while writing to system information database.')
 
     def write_disk(self):
         
@@ -60,14 +60,14 @@ class data_writer():
                 'log_time text, partition text, total_space text, used_space text, free_space text,'
                 'used_percent text, file_system text, mount_point text)')
         except:
-            print('An error has occured while creating disk information database.')
+            print('An error has occurred while creating disk information database.')
         
         try:
             self.log_db.write_values('insert into disks values (?,?,?,?,?,?,?,?,?,?)', self.disk_data)
             #print('Disk information data has been written to the database.')
         
         except:
-            print('An error has occured while writing to disk information database.')
+            print('An error has occurred while writing to disk information database.')
 
     def write_battery(self):
         
@@ -75,14 +75,14 @@ class data_writer():
             self.log_db.create_table('create table if not exists battery (log_id text, log_date text, log_time text, battery_supported text,'
                 'battery_available text, battery_percent text, battery_time_left text, charging_status text, plugged_in text)')
         except:
-            print('An error has occured while creating battery information database.')
+            print('An error has occurred while creating battery information database.')
         
         try:
             self.log_db.write_values('insert into battery values (?,?,?,?,?,?,?,?,?)', [self.battery_data])
             #print('Battery information data has been written to the database.')
         
         except:
-            print('An error has occured while writing to battery information database.')
+            print('An error has occurred while writing to battery information database.')
 
     def write_network(self):
         
@@ -92,14 +92,14 @@ class data_writer():
                 'incoming_drops text, outgoing_bytes text, outgoing_packets text, outgoing_errors text, outgoing_drops text, ipv4_address text, ipv4_netmask text,'
                 ' mac_address text, ipv6_address text, ipv6_netmask text)')
         except:
-            print('An error has occured while creating network information database.')
+            print('An error has occurred while creating network information database.')
         
         try:
             self.log_db.write_values('insert into network values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', self.network_data)
             #print('Network information data has been written to the database.')
         
         except:
-            print('An error has occured while writing to network information database.')
+            print('An error has occurred while writing to network information database.')
 
     def write_process(self):
         
@@ -108,14 +108,14 @@ class data_writer():
                 'ppid text, pname text, cpu_usage text, memory_percent_usage text, memory_rss text,'
                 'memory_vms text, exec_path text, user text, priority text)')
         except:
-            print('An error has occured while creating process information database.')
+            print('An error has occurred while creating process information database.')
         
         try:
             self.log_db.write_values('insert into process values (?,?,?,?,?,?,?,?,?,?,?,?,?)', self.process_data)
             #print('Process information data has been written to the database.')
         
         except:
-            print('An error has occured while writing to process information database.')
+            print('An error has occurred while writing to process information database.')
 
 def start_program(system, disk, battery, network, process):
     writer = data_writer(system, disk, battery, network, process)
