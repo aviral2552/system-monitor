@@ -2,8 +2,8 @@
 # Simple cross-platform python script to monitor and capture CPU, memory, network, sensor and battery information 
 # Part of Project Aradia
 #
-# Last update: 06 February 2019
-# Version: 0.5c
+# Last update: 08 February 2019
+# Version: 0.5d
 #
 ###
 
@@ -398,16 +398,18 @@ class log_collector:
                         address_bugfix += 1
                         continue
 
-                    if current_addr == 'IPv6':
-                        self.network_data.append(str(addr.address))
-                        if addr.netmask:
-                            self.network_data.append(str(addr.netmask))
-                        else:
-                            self.network_data.append('')
-                        address_bugfix = 1
+                    # Dropping IPv6 logging support for maintaining compatibility with systems that only rely on IPv4 addresses
+                    # And for maintaining consistency in the dataset
+                    #if current_addr == 'IPv6':
+                    #    self.network_data.append(str(addr.address))
+                    #    if addr.netmask:
+                    #        self.network_data.append(str(addr.netmask))
+                    #    else:
+                    #        self.network_data.append('')
+                    #    address_bugfix = 1
                         
         self.network_data_array = np.asarray(self.network_data)
-        self.network_data_array = self.network_data_array.reshape(int(len(self.network_data) / 21), 21)
+        self.network_data_array = self.network_data_array.reshape(int(len(self.network_data) / 19), 19)
 
     def collect_all_data(self):
         self.system_info()

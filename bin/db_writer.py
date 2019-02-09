@@ -90,12 +90,12 @@ class data_writer():
             self.log_db.create_table('create table if not exists network (log_id text, log_date text, log_time text, interface_name text,'
                 'active text, speed text, duplex text, mtu text, incoming_bytes text, incoming_packets text, incoming_errors text,'
                 'incoming_drops text, outgoing_bytes text, outgoing_packets text, outgoing_errors text, outgoing_drops text, ipv4_address text, ipv4_netmask text,'
-                ' mac_address text, ipv6_address text, ipv6_netmask text)')
+                ' mac_address text)')
         except:
             print('An error has occurred while creating network information database.')
         
         try:
-            self.log_db.write_values('insert into network values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', self.network_data)
+            self.log_db.write_values('insert into network values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', self.network_data)
             #print('Network information data has been written to the database.')
         
         except:
