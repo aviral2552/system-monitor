@@ -392,11 +392,11 @@ class log_collector:
                     if current_addr == 'MAC':
                         self.network_data.append(str(addr.address))
                         address_bugfix += 1
-                        continue
+                        break
                     elif current_addr == 'IPv6' and address_bugfix == 2:
                         self.network_data.append('No MAC address')
                         address_bugfix += 1
-                        continue
+                        break
 
                     # Dropping IPv6 logging support for maintaining compatibility with systems that only rely on IPv4 addresses
                     # And for maintaining consistency in the dataset
