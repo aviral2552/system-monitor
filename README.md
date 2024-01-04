@@ -30,4 +30,4 @@ You must have `xcode`, `brew` and `git` installed.
 1. Navigate to the folder where you'd like to place the files
 2. Clone the project and start logging by typing the following command
 
-`$ git clone https://github.com/thelamehacker/system-monitor.git && cd system-monitor && cd bin && python3 collect.py`
+`$ git clone https://github.com/aviral2552/system-monitor.git && cd system-monitor && cd bin && python3 collect.py`
